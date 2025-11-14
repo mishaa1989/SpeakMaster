@@ -101,74 +101,84 @@ export default function StudentTestPage() {
             </p>
           </div>
 
-          {loadingTestSets ? (
-            <div className="text-center py-8 text-muted-foreground">
-              로딩 중...
-            </div>
-          ) : testSets.length === 0 ? (
-            <Card className="p-8 text-center">
-              <p className="text-muted-foreground mb-4">
-                현재 응시 가능한 모의고사가 없습니다
+          <div className="space-y-4">
+            <Card className="p-6">
+              <label className="block text-sm font-medium text-foreground mb-2">
+                강사 이메일 주소
+              </label>
+              <input
+                type="email"
+                value={instructorEmail}
+                onChange={(e) => setInstructorEmail(e.target.value)}
+                placeholder="instructor@example.com"
+                className="w-full px-4 py-2 rounded-md border border-input bg-background text-foreground"
+                data-testid="input-instructor-email"
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                완료 후 녹음 파일이 이 이메일로 전송됩니다
               </p>
-              <Button onClick={() => setLocation('/')} data-testid="button-back-home">
-                홈으로 돌아가기
-              </Button>
             </Card>
-          ) : (
-            <div className="space-y-4">
-              {testSets.map((set) => (
-                <Card
-                  key={set.id}
-                  className="p-6 hover-elevate cursor-pointer"
-                  onClick={() => {
-                    if (set.questions.length === 15) {
-                      setSelectedTestSetId(set.id);
-                    } else {
-                      toast({
-                        title: "선택 불가",
-                        description: "이 세트는 아직 준비 중입니다.",
-                        variant: "destructive",
-                      });
-                    }
-                  }}
-                  data-testid={`card-testset-${set.id}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-foreground mb-1">
-                        {set.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        질문 수: {set.questions.length}/15
-                      </p>
-                    </div>
-                    {set.questions.length === 15 && (
-                      <Button data-testid={`button-select-${set.id}`}>
-                        선택하기
-                      </Button>
-                    )}
-                  </div>
-                </Card>
-              ))}
 
-              <Card className="p-6">
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  강사 이메일 주소
-                </label>
-                <input
-                  type="email"
-                  value={instructorEmail}
-                  onChange={(e) => setInstructorEmail(e.target.value)}
-                  placeholder="instructor@example.com"
-                  className="w-full px-4 py-2 rounded-md border border-input bg-background text-foreground"
-                  data-testid="input-instructor-email"
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  완료 후 녹음 파일이 이 이메일로 전송됩니다
+            {loadingTestSets ? (
+              <div className="text-center py-8 text-muted-foreground">
+                로딩 중...
+              </div>
+            ) : testSets.length === 0 ? (
+              <Card className="p-8 text-center">
+                <p className="text-muted-foreground mb-4">
+                  현재 응시 가능한 모의고사가 없습니다
                 </p>
+                <Button onClick={() => setLocation('/')} data-testid="button-back-home">
+                  홈으로 돌아가기
+                </Button>
               </Card>
-            </div>
-          )}
+            ) : (
+              <>
+                {testSets.map((set) => (
+                  <Card
+                    key={set.id}
+                    className="p-6 hover-elevate cursor-pointer"
+                    onClick={() => {
+                      if (set.questions.length === 15) {
+                        if (!instructorEmail) {
+                          toast({
+                            title: "이메일 필요",
+                            description: "강사 이메일을 먼저 입력해주세요.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        setSelectedTestSetId(set.id);
+                      } else {
+                        toast({
+                          title: "선택 불가",
+                          description: "이 세트는 아직 준비 중입니다.",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                    data-testid={`card-testset-${set.id}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground mb-1">
+                          {set.name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          질문 수: {set.questions.length}/15
+                        </p>
+                      </div>
+                      {set.questions.length === 15 && (
+                        <Button data-testid={`button-select-${set.id}`}>
+                          선택하기
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </>
+            )}
+          </div>
         </div>
       </div>
     );
