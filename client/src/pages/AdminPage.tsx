@@ -58,9 +58,10 @@ export default function AdminPage() {
 
   const deleteTestSetMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest(`/api/test-sets/${id}`, {
+      const response = await fetch(`/api/test-sets/${id}`, {
         method: 'DELETE',
       });
+      if (!response.ok) throw new Error('Delete failed');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/test-sets'] });
@@ -80,9 +81,10 @@ export default function AdminPage() {
 
   const deleteQuestionMutation = useMutation({
     mutationFn: async ({ testSetId, questionId }: { testSetId: string; questionId: string }) => {
-      await apiRequest(`/api/test-sets/${testSetId}/questions/${questionId}`, {
+      const response = await fetch(`/api/test-sets/${testSetId}/questions/${questionId}`, {
         method: 'DELETE',
       });
+      if (!response.ok) throw new Error('Delete failed');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/test-sets'] });

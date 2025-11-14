@@ -93,7 +93,8 @@ export class MemStorage implements IStorage {
     const testRecs = this.testRecordings.get(testSetId);
     
     if (testRecs) {
-      for (const [questionId, recordingId] of testRecs.entries()) {
+      const entries = Array.from(testRecs.entries());
+      for (const [questionId, recordingId] of entries) {
         const recording = this.recordings.get(recordingId);
         if (recording) {
           result.set(questionId, recording);
