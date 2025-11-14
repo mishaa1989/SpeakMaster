@@ -9,21 +9,27 @@ export interface IStorage {
   deleteTestSet(id: string): Promise<boolean>;
   deleteQuestion(testSetId: string, questionId: string): Promise<boolean>;
   
-  // Recording operations
-  saveRecording(testSetId: string, questionId: string, blob: Buffer): Promise<string>;
-  getRecording(recordingId: string): Promise<Buffer | undefined>;
-  getAllRecordingsForTest(testSetId: string): Promise<Map<string, Buffer>>;
+  // Question audio operations
+  saveQuestionAudio(testSetId: string, questionId: string, blob: Buffer): Promise<void>;
+  getQuestionAudio(testSetId: string, questionId: string): Promise<Buffer | undefined>;
+  
+  // Student recording operations
+  saveStudentRecording(testSetId: string, questionId: string, blob: Buffer): Promise<string>;
+  getStudentRecording(recordingId: string): Promise<Buffer | undefined>;
+  getAllStudentRecordingsForTest(testSetId: string): Promise<Map<string, Buffer>>;
 }
 
 export class MemStorage implements IStorage {
   private testSets: Map<string, TestSet>;
-  private recordings: Map<string, Buffer>; // recordingId -> audio data
-  private testRecordings: Map<string, Map<string, string>>; // testSetId -> (questionId -> recordingId)
+  private questionAudio: Map<string, Map<string, Buffer>>; // testSetId -> (questionId -> audio buffer)
+  private studentRecordings: Map<string, Buffer>; // recordingId -> audio data
+  private testStudentRecordings: Map<string, Map<string, string>>; // testSetId -> (questionId -> recordingId)
 
   constructor() {
     this.testSets = new Map();
-    this.recordings = new Map();
-    this.testRecordings = new Map();
+    this.questionAudio = new Map();
+    this.studentRecordings = new Map();
+    this.testStudentRecordings = new Map();
   }
 
   async createTestSet(name: string, questions: Omit<Question, 'id'>[]): Promise<TestSet> {
@@ -55,7 +61,8 @@ export class MemStorage implements IStorage {
   async deleteTestSet(id: string): Promise<boolean> {
     const deleted = this.testSets.delete(id);
     if (deleted) {
-      this.testRecordings.delete(id);
+      this.questionAudio.delete(id);
+      this.testStudentRecordings.delete(id);
     }
     return deleted;
   }
@@ -72,30 +79,43 @@ export class MemStorage implements IStorage {
     return true;
   }
 
-  async saveRecording(testSetId: string, questionId: string, blob: Buffer): Promise<string> {
-    const recordingId = randomUUID();
-    this.recordings.set(recordingId, blob);
-    
-    if (!this.testRecordings.has(testSetId)) {
-      this.testRecordings.set(testSetId, new Map());
+  async saveQuestionAudio(testSetId: string, questionId: string, blob: Buffer): Promise<void> {
+    if (!this.questionAudio.has(testSetId)) {
+      this.questionAudio.set(testSetId, new Map());
     }
-    this.testRecordings.get(testSetId)!.set(questionId, recordingId);
+    this.questionAudio.get(testSetId)!.set(questionId, blob);
+  }
+
+  async getQuestionAudio(testSetId: string, questionId: string): Promise<Buffer | undefined> {
+    const testAudio = this.questionAudio.get(testSetId);
+    if (!testAudio) return undefined;
+    return testAudio.get(questionId);
+  }
+
+  async saveStudentRecording(testSetId: string, questionId: string, blob: Buffer): Promise<string> {
+    const recordingId = randomUUID();
+    this.studentRecordings.set(recordingId, blob);
+    
+    if (!this.testStudentRecordings.has(testSetId)) {
+      this.testStudentRecordings.set(testSetId, new Map());
+    }
+    this.testStudentRecordings.get(testSetId)!.set(questionId, recordingId);
     
     return recordingId;
   }
 
-  async getRecording(recordingId: string): Promise<Buffer | undefined> {
-    return this.recordings.get(recordingId);
+  async getStudentRecording(recordingId: string): Promise<Buffer | undefined> {
+    return this.studentRecordings.get(recordingId);
   }
 
-  async getAllRecordingsForTest(testSetId: string): Promise<Map<string, Buffer>> {
+  async getAllStudentRecordingsForTest(testSetId: string): Promise<Map<string, Buffer>> {
     const result = new Map<string, Buffer>();
-    const testRecs = this.testRecordings.get(testSetId);
+    const testRecs = this.testStudentRecordings.get(testSetId);
     
     if (testRecs) {
       const entries = Array.from(testRecs.entries());
       for (const [questionId, recordingId] of entries) {
-        const recording = this.recordings.get(recordingId);
+        const recording = this.studentRecordings.get(recordingId);
         if (recording) {
           result.set(questionId, recording);
         }

@@ -55,16 +55,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const questions = files.map((file, index) => ({
         filename: file.originalname,
-        duration: '0:00', // Would need audio processing to get real duration
-        url: `/api/audio/${file.originalname}`,
+        duration: '0:00',
+        url: '',
         order: index + 1,
       }));
 
       const testSet = await storage.createTestSet(name, questions);
       
-      // Store audio files
+      // Store question audio files and update URLs
       for (let i = 0; i < files.length; i++) {
-        await storage.saveRecording(testSet.id, testSet.questions[i].id, files[i].buffer);
+        const questionId = testSet.questions[i].id;
+        await storage.saveQuestionAudio(testSet.id, questionId, files[i].buffer);
+        testSet.questions[i].url = `/api/test-sets/${testSet.id}/questions/${questionId}/audio`;
       }
 
       res.status(201).json(testSet);
@@ -101,12 +103,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get audio file
-  app.get('/api/audio/:filename', async (req, res) => {
+  // Get question audio file
+  app.get('/api/test-sets/:testSetId/questions/:questionId/audio', async (req, res) => {
     try {
-      // This is a simplified approach - in a real app, you'd store file metadata
-      res.status(404).json({ error: 'Audio endpoint not fully implemented' });
+      const { testSetId, questionId } = req.params;
+      const audioBuffer = await storage.getQuestionAudio(testSetId, questionId);
+      
+      if (!audioBuffer) {
+        return res.status(404).json({ error: 'Audio file not found' });
+      }
+      
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Length', audioBuffer.length.toString());
+      res.send(audioBuffer);
     } catch (error) {
+      console.error('Error fetching audio:', error);
       res.status(500).json({ error: 'Failed to fetch audio' });
     }
   });
@@ -130,11 +141,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Test set not found' });
       }
 
-      // Save recordings
+      // Save student recordings
       for (let i = 0; i < files.length; i++) {
         const questionId = testSet.questions[i]?.id;
         if (questionId) {
-          await storage.saveRecording(testSetId, questionId, files[i].buffer);
+          await storage.saveStudentRecording(testSetId, questionId, files[i].buffer);
         }
       }
 
