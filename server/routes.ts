@@ -8,7 +8,7 @@ import nodemailer from "nodemailer";
 const upload = multer({ 
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'audio/mpeg' || file.mimetype === 'audio/mp3') {
+    if (file.mimetype === 'audio/mpeg' || file.mimetype === 'audio/mp3' || file.mimetype === 'audio/webm') {
       cb(null, true);
     } else {
       cb(null, false);
