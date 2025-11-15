@@ -7,7 +7,7 @@ interface FileUploadZoneProps {
   maxFiles?: number;
 }
 
-export default function FileUploadZone({ onFilesSelected, maxFiles = 15 }: FileUploadZoneProps) {
+export default function FileUploadZone({ onFilesSelected, maxFiles = 50 }: FileUploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDrop = (e: React.DragEvent) => {

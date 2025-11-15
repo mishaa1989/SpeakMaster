@@ -41,7 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new test set with MP3 uploads
-  app.post('/api/test-sets', upload.array('files', 15), async (req, res) => {
+  app.post('/api/test-sets', upload.array('files', 50), async (req, res) => {
     try {
       const files = req.files as Express.Multer.File[];
       if (!files || files.length === 0) {
@@ -135,7 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Submit student recordings
-  app.post('/api/submit-test', upload.array('recordings', 15), async (req, res) => {
+  app.post('/api/submit-test', upload.array('recordings', 50), async (req, res) => {
     try {
       console.log('Submit test request received');
       console.log('Body:', req.body);
