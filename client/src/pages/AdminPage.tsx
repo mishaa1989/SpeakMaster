@@ -21,9 +21,10 @@ export default function AdminPage() {
   });
 
   const createTestSetMutation = useMutation({
-    mutationFn: async (data: { name: string; files: File[] }) => {
+    mutationFn: async (data: { name: string; files: File[]; durations: number[] }) => {
       const formData = new FormData();
       formData.append('name', data.name);
+      formData.append('durations', JSON.stringify(data.durations));
       data.files.forEach(file => {
         formData.append('files', file);
       });
@@ -102,9 +103,36 @@ export default function AdminPage() {
     },
   });
 
-  const handleFilesSelected = (files: File[]) => {
+  const getAudioDuration = (file: File): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const audio = new Audio();
+      audio.onloadedmetadata = () => {
+        resolve(audio.duration);
+      };
+      audio.onerror = () => {
+        reject(new Error('Failed to load audio'));
+      };
+      audio.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleFilesSelected = async (files: File[]) => {
     const name = `모의고사 세트 ${(testSets?.length || 0) + 1}`;
-    createTestSetMutation.mutate({ name, files });
+    
+    try {
+      // Get duration for each file
+      const durations = await Promise.all(
+        files.map(file => getAudioDuration(file))
+      );
+      
+      createTestSetMutation.mutate({ name, files, durations });
+    } catch (error) {
+      toast({
+        title: "오류",
+        description: "오디오 파일 정보를 읽을 수 없습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteQuestion = (testSetId: string, questionId: string) => {

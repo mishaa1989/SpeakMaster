@@ -48,14 +48,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'No files uploaded' });
       }
 
-      const { name } = req.body;
+      const { name, durations } = req.body;
       if (!name) {
         return res.status(400).json({ error: 'Test set name is required' });
       }
 
+      const parsedDurations = durations ? JSON.parse(durations) : [];
+      
+      const formatDuration = (seconds: number): string => {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+      };
+
       const questions = files.map((file, index) => ({
         filename: file.originalname,
-        duration: '0:00',
+        duration: parsedDurations[index] ? formatDuration(parsedDurations[index]) : '0:00',
         url: '',
         order: index + 1,
       }));
