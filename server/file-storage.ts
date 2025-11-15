@@ -34,6 +34,7 @@ export interface IStorage {
   getAllSubmissions(): Promise<Submission[]>;
   getSubmission(id: string): Promise<Submission | undefined>;
   getSubmissionRecording(submissionId: string, recordingIndex: number): Promise<Buffer | undefined>;
+  deleteSubmission(id: string): Promise<boolean>;
 }
 
 export class FileStorage implements IStorage {
@@ -276,6 +277,15 @@ export class FileStorage implements IStorage {
     const recording = this.data.submissionRecordings[submissionId]?.[recordingIndex.toString()];
     if (!recording) return undefined;
     return Buffer.from(recording, 'base64');
+  }
+
+  async deleteSubmission(id: string): Promise<boolean> {
+    if (!this.data.submissions[id]) return false;
+    
+    delete this.data.submissions[id];
+    delete this.data.submissionRecordings[id];
+    await this.save();
+    return true;
   }
 }
 

@@ -117,6 +117,29 @@ export default function AdminPage() {
     },
   });
 
+  const deleteSubmissionMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/submissions/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Delete failed');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/submissions'] });
+      toast({
+        title: "삭제 완료",
+        description: "제출 내역이 삭제되었습니다.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "오류",
+        description: "삭제에 실패했습니다.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const getAudioDuration = (file: File): Promise<number> => {
     return new Promise((resolve, reject) => {
       const audio = new Audio();
@@ -375,15 +398,28 @@ export default function AdminPage() {
                           </p>
                         </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          window.location.href = `/api/submissions/${submission.id}/download`;
-                        }}
-                        data-testid={`button-download-${submission.id}`}
-                      >
-                        다운로드
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            window.location.href = `/api/submissions/${submission.id}/download`;
+                          }}
+                          data-testid={`button-download-${submission.id}`}
+                        >
+                          다운로드
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => {
+                            if (window.confirm(`${submission.studentName}님의 제출 내역을 삭제하시겠습니까?`)) {
+                              deleteSubmissionMutation.mutate(submission.id);
+                            }
+                          }}
+                          data-testid={`button-delete-${submission.id}`}
+                        >
+                          삭제
+                        </Button>
+                      </div>
                     </div>
                   </Card>
                 ))}

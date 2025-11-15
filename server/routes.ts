@@ -166,6 +166,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete submission
+  app.delete('/api/submissions/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteSubmission(id);
+      if (!deleted) {
+        return res.status(404).json({ error: 'Submission not found' });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting submission:', error);
+      res.status(500).json({ error: 'Failed to delete submission' });
+    }
+  });
+
   // Download submission recordings as ZIP
   app.get('/api/submissions/:id/download', async (req, res) => {
     const { id } = req.params;
