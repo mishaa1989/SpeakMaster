@@ -5,6 +5,7 @@ export interface TestSet {
   id: string;
   name: string;
   createdAt: string;
+  instructorEmail: string;
   questions: Question[];
 }
 
@@ -18,6 +19,7 @@ export interface Question {
 
 export const insertTestSetSchema = z.object({
   name: z.string().min(1),
+  instructorEmail: z.string().email(),
   questions: z.array(z.object({
     filename: z.string(),
     duration: z.string(),

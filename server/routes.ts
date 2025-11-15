@@ -48,9 +48,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'No files uploaded' });
       }
 
-      const { name, durations } = req.body;
+      const { name, durations, instructorEmail } = req.body;
       if (!name) {
         return res.status(400).json({ error: 'Test set name is required' });
+      }
+      
+      if (!instructorEmail) {
+        return res.status(400).json({ error: 'Instructor email is required' });
       }
 
       const parsedDurations = durations ? JSON.parse(durations) : [];
@@ -68,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         order: index + 1,
       }));
 
-      const testSet = await storage.createTestSet(name, questions);
+      const testSet = await storage.createTestSet(name, instructorEmail, questions);
       
       // Store question audio files and update URLs
       for (let i = 0; i < files.length; i++) {
@@ -138,10 +142,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Files:', req.files);
       
       const files = req.files as Express.Multer.File[];
-      const { testSetId, instructorEmail } = req.body;
+      const { testSetId } = req.body;
 
-      if (!testSetId || !instructorEmail) {
-        console.error('Missing fields - testSetId:', testSetId, 'instructorEmail:', instructorEmail);
+      if (!testSetId) {
+        console.error('Missing testSetId');
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
@@ -156,6 +160,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!testSet) {
         return res.status(404).json({ error: 'Test set not found' });
       }
+      
+      const instructorEmail = testSet.instructorEmail;
 
       // Save student recordings
       for (let i = 0; i < files.length; i++) {

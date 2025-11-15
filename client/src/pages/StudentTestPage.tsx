@@ -15,7 +15,6 @@ export default function StudentTestPage() {
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [recordings, setRecordings] = useState<Blob[]>([]);
   const [isComplete, setIsComplete] = useState(false);
-  const [instructorEmail, setInstructorEmail] = useState("");
   const { toast } = useToast();
 
   const { data: testSets = [], isLoading: loadingTestSets } = useQuery<TestSet[]>({
@@ -28,12 +27,11 @@ export default function StudentTestPage() {
   });
 
   const submitTestMutation = useMutation({
-    mutationFn: async (data: { testSetId: string; recordings: Blob[]; email: string }) => {
+    mutationFn: async (data: { testSetId: string; recordings: Blob[] }) => {
       console.log('Submitting test with', data.recordings.length, 'recordings');
       
       const formData = new FormData();
       formData.append('testSetId', data.testSetId);
-      formData.append('instructorEmail', data.email);
       
       data.recordings.forEach((blob, index) => {
         console.log(`Recording ${index + 1}:`, blob.size, 'bytes, type:', blob.type);
@@ -80,11 +78,10 @@ export default function StudentTestPage() {
     const allRecordings = [...recordings, recording];
     setRecordings(allRecordings);
     
-    if (selectedTestSetId && instructorEmail) {
+    if (selectedTestSetId) {
       submitTestMutation.mutate({
         testSetId: selectedTestSetId,
         recordings: allRecordings,
-        email: instructorEmail,
       });
     }
   };
@@ -107,23 +104,6 @@ export default function StudentTestPage() {
           </div>
 
           <div className="space-y-4">
-            <Card className="p-6">
-              <label className="block text-sm font-medium text-foreground mb-2">
-                강사 이메일 주소
-              </label>
-              <input
-                type="email"
-                value={instructorEmail}
-                onChange={(e) => setInstructorEmail(e.target.value)}
-                placeholder="instructor@example.com"
-                className="w-full px-4 py-2 rounded-md border border-input bg-background text-foreground"
-                data-testid="input-instructor-email"
-              />
-              <p className="text-xs text-muted-foreground mt-2">
-                완료 후 녹음 파일이 이 이메일로 전송됩니다
-              </p>
-            </Card>
-
             {loadingTestSets ? (
               <div className="text-center py-8 text-muted-foreground">
                 로딩 중...
@@ -145,14 +125,6 @@ export default function StudentTestPage() {
                     className="p-6 hover-elevate cursor-pointer"
                     onClick={() => {
                       if (set.questions.length === 15) {
-                        if (!instructorEmail) {
-                          toast({
-                            title: "이메일 필요",
-                            description: "강사 이메일을 먼저 입력해주세요.",
-                            variant: "destructive",
-                          });
-                          return;
-                        }
                         setSelectedTestSetId(set.id);
                       } else {
                         toast({

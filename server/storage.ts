@@ -3,7 +3,8 @@ import { randomUUID } from "crypto";
 
 export interface IStorage {
   // Test Set operations
-  createTestSet(name: string, questions: Omit<Question, 'id'>[]): Promise<TestSet>;
+  createTestSet(name: string, instructorEmail: string, questions: Omit<Question, 'id'>[]): Promise<TestSet>;
+  updateTestSetEmail(id: string, instructorEmail: string): Promise<boolean>;
   getTestSet(id: string): Promise<TestSet | undefined>;
   getAllTestSets(): Promise<TestSet[]>;
   deleteTestSet(id: string): Promise<boolean>;
@@ -32,7 +33,7 @@ export class MemStorage implements IStorage {
     this.testStudentRecordings = new Map();
   }
 
-  async createTestSet(name: string, questions: Omit<Question, 'id'>[]): Promise<TestSet> {
+  async createTestSet(name: string, instructorEmail: string, questions: Omit<Question, 'id'>[]): Promise<TestSet> {
     const id = randomUUID();
     const questionsWithIds: Question[] = questions.map(q => ({
       ...q,
@@ -42,12 +43,22 @@ export class MemStorage implements IStorage {
     const testSet: TestSet = {
       id,
       name,
+      instructorEmail,
       createdAt: new Date().toISOString().split('T')[0],
       questions: questionsWithIds,
     };
     
     this.testSets.set(id, testSet);
     return testSet;
+  }
+
+  async updateTestSetEmail(id: string, instructorEmail: string): Promise<boolean> {
+    const testSet = this.testSets.get(id);
+    if (!testSet) return false;
+    
+    testSet.instructorEmail = instructorEmail;
+    this.testSets.set(id, testSet);
+    return true;
   }
 
   async getTestSet(id: string): Promise<TestSet | undefined> {

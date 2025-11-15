@@ -14,6 +14,7 @@ import type { TestSet } from "@shared/schema";
 export default function AdminPage() {
   const [, setLocation] = useLocation();
   const [showUpload, setShowUpload] = useState(false);
+  const [instructorEmail, setInstructorEmail] = useState("mishaa1989@naver.com");
   const { toast } = useToast();
 
   const { data: testSets = [], isLoading } = useQuery<TestSet[]>({
@@ -21,9 +22,10 @@ export default function AdminPage() {
   });
 
   const createTestSetMutation = useMutation({
-    mutationFn: async (data: { name: string; files: File[]; durations: number[] }) => {
+    mutationFn: async (data: { name: string; files: File[]; durations: number[]; instructorEmail: string }) => {
       const formData = new FormData();
       formData.append('name', data.name);
+      formData.append('instructorEmail', data.instructorEmail);
       formData.append('durations', JSON.stringify(data.durations));
       data.files.forEach(file => {
         formData.append('files', file);
@@ -119,13 +121,22 @@ export default function AdminPage() {
   const handleFilesSelected = async (files: File[]) => {
     const name = `모의고사 세트 ${(testSets?.length || 0) + 1}`;
     
+    if (!instructorEmail) {
+      toast({
+        title: "오류",
+        description: "강사 이메일을 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       // Get duration for each file
       const durations = await Promise.all(
         files.map(file => getAudioDuration(file))
       );
       
-      createTestSetMutation.mutate({ name, files, durations });
+      createTestSetMutation.mutate({ name, files, durations, instructorEmail });
     } catch (error) {
       toast({
         title: "오류",
@@ -186,7 +197,24 @@ export default function AdminPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         {showUpload && (
-          <div className="mb-8">
+          <div className="mb-8 space-y-4">
+            <Card className="p-6">
+              <label className="block text-sm font-medium text-foreground mb-2">
+                강사 이메일 주소
+              </label>
+              <input
+                type="email"
+                value={instructorEmail}
+                onChange={(e) => setInstructorEmail(e.target.value)}
+                placeholder="instructor@example.com"
+                className="w-full px-4 py-2 rounded-md border border-input bg-background text-foreground"
+                data-testid="input-instructor-email"
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                학생이 제출하면 녹음 파일이 이 이메일로 전송됩니다
+              </p>
+            </Card>
+            
             <Card>
               <CardHeader>
                 <h2 className="text-lg font-semibold">새 모의고사 세트 업로드</h2>
