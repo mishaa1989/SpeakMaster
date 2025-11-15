@@ -115,6 +115,18 @@ export default function AdminPage() {
     deleteTestSetMutation.mutate(setId);
   };
 
+  const handlePlayAudio = (url: string) => {
+    const audio = new Audio(url);
+    audio.play().catch(err => {
+      console.error('Audio playback failed:', err);
+      toast({
+        title: "재생 실패",
+        description: "오디오 파일을 재생할 수 없습니다.",
+        variant: "destructive",
+      });
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b border-border sticky top-0 bg-background z-10">
@@ -186,7 +198,7 @@ export default function AdminPage() {
                 key={set.id}
                 {...set}
                 onDeleteQuestion={(qId) => handleDeleteQuestion(set.id, qId)}
-                onPlayQuestion={(url) => console.log('Play:', url)}
+                onPlayQuestion={handlePlayAudio}
                 onDeleteSet={handleDeleteSet}
               />
             ))}
