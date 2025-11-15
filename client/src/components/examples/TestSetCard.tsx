@@ -10,7 +10,7 @@ export default function TestSetCardExample() {
   return (
     <TestSetCard
       id="set-1"
-      name="모의고사 세트 1"
+      name="진단평가 세트 1"
       createdAt="2025-11-14"
       questions={mockQuestions}
       onDeleteQuestion={(id) => console.log('Delete question:', id)}

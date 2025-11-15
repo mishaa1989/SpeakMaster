@@ -194,10 +194,10 @@ export default function StudentTestPage() {
         <div className="max-w-2xl w-full">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-semibold text-foreground mb-2">
-              모의고사 선택
+              진단평가 선택
             </h1>
             <p className="text-muted-foreground">
-              응시할 모의고사를 선택하세요 ({selectedLanguage})
+              응시할 진단평가를 선택하세요 ({selectedLanguage})
             </p>
           </div>
 
@@ -209,7 +209,7 @@ export default function StudentTestPage() {
             ) : filteredTestSets.length === 0 ? (
               <Card className="p-8 text-center">
                 <p className="text-muted-foreground mb-4">
-                  {selectedLanguage} 언어로 된 응시 가능한 모의고사가 없습니다
+                  {selectedLanguage} 언어로 된 응시 가능한 진단평가가 없습니다
                 </p>
                 <Button onClick={() => {
                   setStudentName("");

@@ -59,13 +59,13 @@ export default function AdminPage() {
       setShowUpload(false);
       toast({
         title: "성공",
-        description: "새 모의고사 세트가 생성되었습니다.",
+        description: "새 진단평가 세트가 생성되었습니다.",
       });
     },
     onError: () => {
       toast({
         title: "오류",
-        description: "모의고사 세트 생성에 실패했습니다.",
+        description: "진단평가 세트 생성에 실패했습니다.",
         variant: "destructive",
       });
     },
@@ -82,7 +82,7 @@ export default function AdminPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/test-sets'] });
       toast({
         title: "삭제 완료",
-        description: "모의고사 세트가 삭제되었습니다.",
+        description: "진단평가 세트가 삭제되었습니다.",
       });
     },
     onError: () => {
@@ -249,7 +249,7 @@ export default function AdminPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-6" data-testid="tabs-list">
             <TabsTrigger value="test-sets" data-testid="tab-test-sets">
-              모의고사 관리
+              진단평가 관리
             </TabsTrigger>
             <TabsTrigger value="submissions" data-testid="tab-submissions">
               제출 내역

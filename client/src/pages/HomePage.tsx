@@ -11,7 +11,7 @@ export default function HomePage() {
       <div className="max-w-4xl w-full">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-semibold text-foreground mb-4">
-            모의 OPIC 시스템
+            첸트룸 타우러스 진단평가 시스템
           </h1>
           <p className="text-lg text-muted-foreground">
             외국어 회화 학습 관리 시스템
@@ -33,7 +33,7 @@ export default function HomePage() {
                   학생 모드
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  모의고사 응시하기
+                  진단평가 응시하기
                 </p>
               </div>
               <Button className="w-full" data-testid="button-student-mode">
@@ -56,7 +56,7 @@ export default function HomePage() {
                   관리자 모드
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  모의고사 세트 관리
+                  진단평가 세트 관리
                 </p>
               </div>
               <Button variant="secondary" className="w-full" data-testid="button-admin-mode">

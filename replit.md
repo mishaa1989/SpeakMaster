@@ -1,8 +1,8 @@
-# Mock OPIC LMS
+# 첸트룸 타우러스 진단평가 시스템
 
 ## Overview
 
-Mock OPIC LMS is a web-based learning management system designed for administering and taking OPIC (Oral Proficiency Interview by Computer) mock tests. The application serves two primary user roles:
+첸트룸 타우러스 진단평가 시스템 (Centrum Taurus Diagnostic Assessment System) is a web-based learning management system designed for administering and taking foreign language oral proficiency diagnostic assessments. The application serves two primary user roles:
 
 1. **Administrators** - Create and manage test sets by uploading 1-50 MP3 audio files containing questions, and download student submissions as ZIP files
 2. **Students** - Take tests by listening to audio questions and recording spoken responses, after providing their name and language selection
