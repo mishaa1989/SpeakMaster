@@ -1,10 +1,12 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./file-storage";
+import { DbStorage } from "./storage";
 import multer from "multer";
 import { insertTestSetSchema } from "@shared/schema";
 import archiver from "archiver";
 import bcrypt from "bcrypt";
+
+const storage = new DbStorage();
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -302,6 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isPasswordSet = await storage.isAdminPasswordSet();
       res.json({ setupRequired: !isPasswordSet });
     } catch (error) {
+      console.error('Error checking setup status:', error);
       res.status(500).json({ error: 'Failed to check setup status' });
     }
   });

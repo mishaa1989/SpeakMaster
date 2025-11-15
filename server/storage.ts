@@ -1,4 +1,4 @@
-import { type TestSet, type Question, testSets, questions, studentRecordings, adminSettings } from "@shared/schema";
+import { type TestSet, type Question, type Submission, testSets, questions, studentRecordings, adminSettings, submissions, submissionRecordings } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -25,6 +25,13 @@ export interface IStorage {
   saveStudentRecording(testSetId: string, questionId: string, blob: Buffer): Promise<string>;
   getStudentRecording(recordingId: string): Promise<Buffer | undefined>;
   getAllStudentRecordingsForTest(testSetId: string): Promise<Map<string, Buffer>>;
+  
+  // Submission operations
+  saveSubmission(testSetId: string, testSetName: string, studentName: string, language: string, recordings: Buffer[]): Promise<Submission>;
+  getAllSubmissions(): Promise<Submission[]>;
+  getSubmission(id: string): Promise<Submission | undefined>;
+  getSubmissionRecording(submissionId: string, recordingIndex: number): Promise<Buffer | undefined>;
+  deleteSubmission(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -156,6 +163,26 @@ export class MemStorage implements IStorage {
     }
     
     return result;
+  }
+
+  async saveSubmission(testSetId: string, testSetName: string, studentName: string, language: string, recordings: Buffer[]): Promise<Submission> {
+    throw new Error("Not implemented in MemStorage - use DbStorage");
+  }
+
+  async getAllSubmissions(): Promise<Submission[]> {
+    throw new Error("Not implemented in MemStorage - use DbStorage");
+  }
+
+  async getSubmission(id: string): Promise<Submission | undefined> {
+    throw new Error("Not implemented in MemStorage - use DbStorage");
+  }
+
+  async getSubmissionRecording(submissionId: string, recordingIndex: number): Promise<Buffer | undefined> {
+    throw new Error("Not implemented in MemStorage - use DbStorage");
+  }
+
+  async deleteSubmission(id: string): Promise<boolean> {
+    throw new Error("Not implemented in MemStorage - use DbStorage");
   }
 }
 
@@ -349,6 +376,92 @@ export class DbStorage implements IStorage {
     }
 
     return result;
+  }
+
+  async saveSubmission(
+    testSetId: string,
+    testSetName: string,
+    studentName: string,
+    language: string,
+    recordings: Buffer[]
+  ): Promise<Submission> {
+    const [submission] = await db.insert(submissions).values({
+      testSetId: parseInt(testSetId),
+      testSetName,
+      studentName,
+      language,
+      recordingCount: recordings.length,
+    }).returning();
+
+    await Promise.all(
+      recordings.map((buffer, index) => 
+        db.insert(submissionRecordings).values({
+          submissionId: submission.id,
+          recordingIndex: index,
+          recordingData: buffer.toString('base64'),
+        })
+      )
+    );
+
+    return {
+      id: submission.id.toString(),
+      testSetId: submission.testSetId.toString(),
+      testSetName: submission.testSetName,
+      studentName: submission.studentName,
+      language: submission.language,
+      submittedAt: submission.submittedAt.toISOString(),
+      recordingCount: submission.recordingCount,
+    };
+  }
+
+  async getAllSubmissions(): Promise<Submission[]> {
+    const submissionRows = await db.select().from(submissions);
+    return submissionRows.map(row => ({
+      id: row.id.toString(),
+      testSetId: row.testSetId.toString(),
+      testSetName: row.testSetName,
+      studentName: row.studentName,
+      language: row.language,
+      submittedAt: row.submittedAt.toISOString(),
+      recordingCount: row.recordingCount,
+    }));
+  }
+
+  async getSubmission(id: string): Promise<Submission | undefined> {
+    const [submission] = await db.select()
+      .from(submissions)
+      .where(eq(submissions.id, parseInt(id)));
+
+    if (!submission) return undefined;
+
+    return {
+      id: submission.id.toString(),
+      testSetId: submission.testSetId.toString(),
+      testSetName: submission.testSetName,
+      studentName: submission.studentName,
+      language: submission.language,
+      submittedAt: submission.submittedAt.toISOString(),
+      recordingCount: submission.recordingCount,
+    };
+  }
+
+  async getSubmissionRecording(submissionId: string, recordingIndex: number): Promise<Buffer | undefined> {
+    const [recording] = await db.select()
+      .from(submissionRecordings)
+      .where(
+        and(
+          eq(submissionRecordings.submissionId, parseInt(submissionId)),
+          eq(submissionRecordings.recordingIndex, recordingIndex)
+        )
+      );
+
+    if (!recording) return undefined;
+    return Buffer.from(recording.recordingData, 'base64');
+  }
+
+  async deleteSubmission(id: string): Promise<boolean> {
+    await db.delete(submissions).where(eq(submissions.id, parseInt(id)));
+    return true;
   }
 }
 

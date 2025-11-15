@@ -34,11 +34,30 @@ export const studentRecordings = pgTable("student_recordings", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const submissions = pgTable("submissions", {
+  id: serial("id").primaryKey(),
+  testSetId: integer("test_set_id").notNull().references(() => testSets.id, { onDelete: "cascade" }),
+  testSetName: text("test_set_name").notNull(),
+  studentName: text("student_name").notNull(),
+  language: text("language").notNull(),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+  recordingCount: integer("recording_count").notNull(),
+});
+
+export const submissionRecordings = pgTable("submission_recordings", {
+  id: serial("id").primaryKey(),
+  submissionId: integer("submission_id").notNull().references(() => submissions.id, { onDelete: "cascade" }),
+  recordingIndex: integer("recording_index").notNull(),
+  recordingData: text("recording_data").notNull(), // Base64 encoded recording
+});
+
 // Type exports for database tables
 export type AdminSettingsRow = typeof adminSettings.$inferSelect;
 export type TestSetRow = typeof testSets.$inferSelect;
 export type QuestionRow = typeof questions.$inferSelect;
 export type StudentRecordingRow = typeof studentRecordings.$inferSelect;
+export type SubmissionRow = typeof submissions.$inferSelect;
+export type SubmissionRecordingRow = typeof submissionRecordings.$inferSelect;
 
 // Test Set Schema
 export interface TestSet {
