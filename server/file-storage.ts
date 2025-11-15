@@ -10,6 +10,7 @@ const RECORDINGS_DIR = path.join(DATA_DIR, "recordings");
 const SUBMISSIONS_DIR = path.join(DATA_DIR, "submissions");
 
 interface StorageData {
+  adminPasswordHash?: string;
   testSets: Record<string, TestSet>;
   questionAudio: Record<string, Record<string, string>>; // testSetId -> questionId -> base64
   studentRecordings: Record<string, string>; // recordingId -> base64
@@ -19,6 +20,9 @@ interface StorageData {
 }
 
 export interface IStorage {
+  isAdminPasswordSet(): Promise<boolean>;
+  setAdminPassword(passwordHash: string): Promise<void>;
+  getAdminPasswordHash(): Promise<string | undefined>;
   createTestSet(name: string, instructorEmail: string, language: string, questions: Omit<Question, 'id'>[]): Promise<TestSet>;
   updateTestSetEmail(id: string, instructorEmail: string): Promise<boolean>;
   getTestSet(id: string): Promise<TestSet | undefined>;
@@ -39,6 +43,7 @@ export interface IStorage {
 
 export class FileStorage implements IStorage {
   private data: StorageData = {
+    adminPasswordHash: undefined,
     testSets: {},
     questionAudio: {},
     studentRecordings: {},
@@ -49,6 +54,19 @@ export class FileStorage implements IStorage {
 
   constructor() {
     this.init();
+  }
+
+  async isAdminPasswordSet(): Promise<boolean> {
+    return this.data.adminPasswordHash !== undefined && this.data.adminPasswordHash !== '';
+  }
+
+  async setAdminPassword(passwordHash: string): Promise<void> {
+    this.data.adminPasswordHash = passwordHash;
+    await this.save();
+  }
+
+  async getAdminPasswordHash(): Promise<string | undefined> {
+    return this.data.adminPasswordHash;
   }
 
   private async init() {

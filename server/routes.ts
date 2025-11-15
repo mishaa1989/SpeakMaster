@@ -4,6 +4,7 @@ import { storage } from "./file-storage";
 import multer from "multer";
 import { insertTestSetSchema } from "@shared/schema";
 import archiver from "archiver";
+import bcrypt from "bcrypt";
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -295,23 +296,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if admin setup is required
+  app.get('/api/admin/setup-required', async (req, res) => {
+    try {
+      const isPasswordSet = await storage.isAdminPasswordSet();
+      res.json({ setupRequired: !isPasswordSet });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to check setup status' });
+    }
+  });
+
+  // Initial admin setup
+  app.post('/api/admin/setup', async (req, res) => {
+    try {
+      // Check if password is already set
+      const isPasswordSet = await storage.isAdminPasswordSet();
+      if (isPasswordSet) {
+        return res.status(400).json({ error: 'Admin password already configured' });
+      }
+
+      const { password } = req.body;
+      if (!password || password.length < 4) {
+        return res.status(400).json({ error: 'Password must be at least 4 characters' });
+      }
+
+      // Hash password and save
+      const passwordHash = await bcrypt.hash(password, 10);
+      await storage.setAdminPassword(passwordHash);
+
+      // Automatically log in after setup
+      req.session.isAdminAuthenticated = true;
+      res.json({ success: true, message: 'Admin password set successfully' });
+    } catch (error) {
+      console.error('Setup error:', error);
+      res.status(500).json({ error: 'Failed to set up admin password' });
+    }
+  });
+
   // Admin login routes
   app.post('/api/admin/login', async (req, res) => {
     try {
       const { password } = req.body;
-      const adminPassword = process.env.ADMIN_PASSWORD;
 
-      if (!adminPassword) {
+      // Get password hash from database
+      const passwordHash = await storage.getAdminPasswordHash();
+      if (!passwordHash) {
         return res.status(500).json({ error: 'Admin password not configured' });
       }
 
-      if (password === adminPassword) {
+      // Compare password with hash
+      const isValid = await bcrypt.compare(password, passwordHash);
+      if (isValid) {
         req.session.isAdminAuthenticated = true;
         res.json({ success: true, message: 'Login successful' });
       } else {
         res.status(401).json({ error: 'Invalid password' });
       }
     } catch (error) {
+      console.error('Login error:', error);
       res.status(500).json({ error: 'Login failed' });
     }
   });

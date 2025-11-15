@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,28 @@ export default function AdminLoginPage() {
   const [, setLocation] = useLocation();
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const checkSetupRequired = async () => {
+      try {
+        const response = await fetch('/api/admin/setup-required');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.setupRequired) {
+            setLocation('/admin/setup');
+          }
+        }
+      } catch (error) {
+        console.error('Error checking setup status:', error);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkSetupRequired();
+  }, [setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +70,14 @@ export default function AdminLoginPage() {
       setIsLoading(false);
     }
   };
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <p className="text-muted-foreground">확인 중...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
