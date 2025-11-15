@@ -10,7 +10,7 @@ export interface IStorage {
   getAdminPasswordHash(): Promise<string | undefined>;
   
   // Test Set operations
-  createTestSet(name: string, instructorEmail: string, questions: Omit<Question, 'id'>[]): Promise<TestSet>;
+  createTestSet(name: string, instructorEmail: string, language: string, questions: Omit<Question, 'id'>[]): Promise<TestSet>;
   updateTestSetEmail(id: string, instructorEmail: string): Promise<boolean>;
   getTestSet(id: string): Promise<TestSet | undefined>;
   getAllTestSets(): Promise<TestSet[]>;
@@ -54,7 +54,7 @@ export class MemStorage implements IStorage {
     return this.adminPasswordHash;
   }
 
-  async createTestSet(name: string, instructorEmail: string, questions: Omit<Question, 'id'>[]): Promise<TestSet> {
+  async createTestSet(name: string, instructorEmail: string, language: string, questions: Omit<Question, 'id'>[]): Promise<TestSet> {
     const id = randomUUID();
     const questionsWithIds: Question[] = questions.map(q => ({
       ...q,
@@ -65,6 +65,7 @@ export class MemStorage implements IStorage {
       id,
       name,
       instructorEmail,
+      language,
       createdAt: new Date().toISOString().split('T')[0],
       questions: questionsWithIds,
     };
@@ -174,11 +175,12 @@ export class DbStorage implements IStorage {
     return settings?.passwordHash;
   }
 
-  async createTestSet(name: string, instructorEmail: string, questionsData: Omit<Question, 'id'>[]): Promise<TestSet> {
+  async createTestSet(name: string, instructorEmail: string, language: string, questionsData: Omit<Question, 'id'>[]): Promise<TestSet> {
     // Create test set
     const [testSetRow] = await db.insert(testSets).values({
       name,
       instructorEmail,
+      language,
     }).returning();
 
     // Create questions with audio data
@@ -200,6 +202,7 @@ export class DbStorage implements IStorage {
       id: testSetRow.id.toString(),
       name: testSetRow.name,
       instructorEmail: testSetRow.instructorEmail,
+      language: testSetRow.language,
       createdAt: testSetRow.createdAt.toISOString().split('T')[0],
       questions: questionRows.map(q => ({
         id: q.id.toString(),
@@ -234,6 +237,7 @@ export class DbStorage implements IStorage {
       id: testSetRow.id.toString(),
       name: testSetRow.name,
       instructorEmail: testSetRow.instructorEmail,
+      language: testSetRow.language,
       createdAt: testSetRow.createdAt.toISOString().split('T')[0],
       questions: questionRows.map(q => ({
         id: q.id.toString(),
@@ -259,6 +263,7 @@ export class DbStorage implements IStorage {
           id: testSetRow.id.toString(),
           name: testSetRow.name,
           instructorEmail: testSetRow.instructorEmail,
+          language: testSetRow.language,
           createdAt: testSetRow.createdAt.toISOString().split('T')[0],
           questions: questionRows.map(q => ({
             id: q.id.toString(),

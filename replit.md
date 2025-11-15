@@ -15,13 +15,24 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (November 15, 2025)
 
-### Admin Login System
-- Implemented password-based authentication for admin access
-- Admin password stored in ADMIN_PASSWORD environment variable
+### Initial Setup Flow for Admin Password
+- Replaced environment variable requirement with database-stored password
+- First-time setup: /admin/login automatically redirects to /admin/setup
+- Password requirements: minimum 4 characters, confirmed twice
+- Password security: bcrypt hashing (10 rounds) before database storage
+- Auto-login after initial setup
+- Duplicate setup prevention: API returns 400 if password already configured
+
+### Admin Authentication System
 - Session-based authentication using express-session (24-hour cookie lifetime)
 - All admin endpoints protected with requireAuth middleware
 - Login flow: Home → Admin Login (/admin/login) → Admin Dashboard (/admin)
-- Logout button added to admin dashboard header
+- Setup flow: /admin/login → /admin/setup (first time) → Auto-login → /admin
+- Logout button in admin dashboard header
+
+### Database Schema Updates
+- Added `admin_settings` table for password storage
+- Added `language` column to `test_sets` table (migrated existing data)
 
 ## System Architecture
 

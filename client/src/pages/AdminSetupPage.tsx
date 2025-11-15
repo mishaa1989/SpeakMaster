@@ -38,10 +38,7 @@ export default function AdminSetupPage() {
     setIsSubmitting(true);
 
     try {
-      await apiRequest("/api/admin/setup", {
-        method: "POST",
-        body: JSON.stringify({ password }),
-      });
+      await apiRequest("POST", "/api/admin/setup", { password });
 
       toast({
         title: "성공",

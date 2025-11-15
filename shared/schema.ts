@@ -13,6 +13,7 @@ export const testSets = pgTable("test_sets", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   instructorEmail: text("instructor_email").notNull(),
+  language: text("language").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
