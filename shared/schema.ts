@@ -83,7 +83,7 @@ export interface Submission {
   studentName: string;
   language: string;
   submittedAt: string;
-  recordingFiles: string[]; // Array of file paths
+  recordingCount: number; // Number of recordings
 }
 
 export const submitTestSchema = z.object({

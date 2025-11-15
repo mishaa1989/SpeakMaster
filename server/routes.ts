@@ -133,6 +133,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all submissions
+  app.get('/api/submissions', async (req, res) => {
+    try {
+      const submissions = await storage.getAllSubmissions();
+      res.json(submissions);
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+      res.status(500).json({ error: 'Failed to fetch submissions' });
+    }
+  });
+
+  // Get a specific submission
+  app.get('/api/submissions/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const submission = await storage.getSubmission(id);
+      
+      if (!submission) {
+        return res.status(404).json({ error: 'Submission not found' });
+      }
+      
+      res.json(submission);
+    } catch (error) {
+      console.error('Error fetching submission:', error);
+      res.status(500).json({ error: 'Failed to fetch submission' });
+    }
+  });
+
   // Submit student recordings
   app.post('/api/submit-test', upload.array('recordings', 50), async (req, res) => {
     try {

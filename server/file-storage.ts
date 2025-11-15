@@ -210,16 +210,14 @@ export class FileStorage implements IStorage {
     recordings: Buffer[]
   ): Promise<Submission> {
     const id = randomUUID();
-    const recordingFiles: string[] = [];
 
-    // Save each recording
+    // Save each recording as base64 in memory storage
     if (!this.data.submissionRecordings[id]) {
       this.data.submissionRecordings[id] = {};
     }
 
     recordings.forEach((buffer, index) => {
       this.data.submissionRecordings[id][index.toString()] = buffer.toString('base64');
-      recordingFiles.push(`${id}_${index}.webm`);
     });
 
     const submission: Submission = {
@@ -229,7 +227,7 @@ export class FileStorage implements IStorage {
       studentName,
       language,
       submittedAt: new Date().toISOString(),
-      recordingFiles,
+      recordingCount: recordings.length,
     };
 
     this.data.submissions[id] = submission;

@@ -1,5 +1,6 @@
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState } from "react";
@@ -9,7 +10,7 @@ import FileUploadZone from "@/components/admin/FileUploadZone";
 import TestSetCard from "@/components/admin/TestSetCard";
 import emptyStateImage from "@assets/generated_images/Empty_state_educational_illustration_b3f91838.png";
 import { useToast } from "@/hooks/use-toast";
-import type { TestSet } from "@shared/schema";
+import type { TestSet, Submission } from "@shared/schema";
 
 const LANGUAGES = ["영어", "중국어", "러시아어", "독일어", "프랑스어"];
 
@@ -19,10 +20,16 @@ export default function AdminPage() {
   const [instructorEmail, setInstructorEmail] = useState("mishaa1989@naver.com");
   const [selectedLanguage, setSelectedLanguage] = useState(LANGUAGES[0]);
   const [testName, setTestName] = useState("");
+  const [activeTab, setActiveTab] = useState("test-sets");
   const { toast } = useToast();
 
   const { data: testSets = [], isLoading } = useQuery<TestSet[]>({
     queryKey: ['/api/test-sets'],
+  });
+
+  const { data: submissions = [], isLoading: submissionsLoading } = useQuery<Submission[]>({
+    queryKey: ['/api/submissions'],
+    enabled: activeTab === 'submissions',
   });
 
   const createTestSetMutation = useMutation({
@@ -198,122 +205,188 @@ export default function AdminPage() {
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <h1 className="text-2xl font-semibold text-foreground">
-                모의고사 관리
+                관리자 페이지
               </h1>
             </div>
-            <Button
-              onClick={() => setShowUpload(!showUpload)}
-              data-testid="button-new-set"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              새 세트 만들기
-            </Button>
+            {activeTab === 'test-sets' && (
+              <Button
+                onClick={() => setShowUpload(!showUpload)}
+                data-testid="button-new-set"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                새 세트 만들기
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {showUpload && (
-          <div className="mb-8 space-y-4">
-            <Card className="p-6">
-              <label className="block text-sm font-medium text-foreground mb-2">
-                강사 이메일 주소
-              </label>
-              <input
-                type="email"
-                value={instructorEmail}
-                onChange={(e) => setInstructorEmail(e.target.value)}
-                placeholder="instructor@example.com"
-                className="w-full px-4 py-2 rounded-md border border-input bg-background text-foreground"
-                data-testid="input-instructor-email"
-              />
-              <p className="text-xs text-muted-foreground mt-2">
-                학생이 제출하면 녹음 파일이 이 이메일로 전송됩니다
-              </p>
-            </Card>
-            
-            <Card className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  언어 선택
-                </label>
-                <select
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
-                  className="w-full px-4 py-2 rounded-md border border-input bg-background text-foreground"
-                  data-testid="select-language"
-                >
-                  {LANGUAGES.map((lang) => (
-                    <option key={lang} value={lang}>
-                      {lang}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="mb-6" data-testid="tabs-list">
+            <TabsTrigger value="test-sets" data-testid="tab-test-sets">
+              모의고사 관리
+            </TabsTrigger>
+            <TabsTrigger value="submissions" data-testid="tab-submissions">
+              제출 내역
+            </TabsTrigger>
+          </TabsList>
 
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  테스트 이름
-                </label>
-                <input
-                  type="text"
-                  value={testName}
-                  onChange={(e) => setTestName(e.target.value)}
-                  placeholder="예: 진단 평가 1"
-                  className="w-full px-4 py-2 rounded-md border border-input bg-background text-foreground"
-                  data-testid="input-test-name"
+          <TabsContent value="test-sets">
+            {showUpload && (
+              <div className="mb-8 space-y-4">
+                <Card className="p-6">
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    강사 이메일 주소
+                  </label>
+                  <input
+                    type="email"
+                    value={instructorEmail}
+                    onChange={(e) => setInstructorEmail(e.target.value)}
+                    placeholder="instructor@example.com"
+                    className="w-full px-4 py-2 rounded-md border border-input bg-background text-foreground"
+                    data-testid="input-instructor-email"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    학생이 제출하면 녹음 파일이 이 이메일로 전송됩니다
+                  </p>
+                </Card>
+                
+                <Card className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      언어 선택
+                    </label>
+                    <select
+                      value={selectedLanguage}
+                      onChange={(e) => setSelectedLanguage(e.target.value)}
+                      className="w-full px-4 py-2 rounded-md border border-input bg-background text-foreground"
+                      data-testid="select-language"
+                    >
+                      {LANGUAGES.map((lang) => (
+                        <option key={lang} value={lang}>
+                          {lang}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      테스트 이름
+                    </label>
+                    <input
+                      type="text"
+                      value={testName}
+                      onChange={(e) => setTestName(e.target.value)}
+                      placeholder="예: 진단 평가 1"
+                      className="w-full px-4 py-2 rounded-md border border-input bg-background text-foreground"
+                      data-testid="input-test-name"
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      최종 이름: {selectedLanguage} - {testName || "(이름 입력)"}
+                    </p>
+                  </div>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <h2 className="text-lg font-semibold">MP3 파일 업로드</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      15개의 MP3 파일을 업로드하세요
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <FileUploadZone onFilesSelected={handleFilesSelected} />
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {isLoading ? (
+              <div className="flex justify-center py-16">
+                <div className="text-muted-foreground">로딩 중...</div>
+              </div>
+            ) : testSets.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <img 
+                  src={emptyStateImage} 
+                  alt="Empty state" 
+                  className="w-64 h-64 object-contain mb-6"
                 />
-                <p className="text-xs text-muted-foreground mt-2">
-                  최종 이름: {selectedLanguage} - {testName || "(이름 입력)"}
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  아직 세트가 없습니다
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  새 세트 만들기 버튼을 눌러 시작하세요
                 </p>
               </div>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <h2 className="text-lg font-semibold">MP3 파일 업로드</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  15개의 MP3 파일을 업로드하세요
-                </p>
-              </CardHeader>
-              <CardContent>
-                <FileUploadZone onFilesSelected={handleFilesSelected} />
-              </CardContent>
-            </Card>
-          </div>
-        )}
+            ) : (
+              <div className="grid gap-6">
+                {testSets.map(set => (
+                  <TestSetCard
+                    key={set.id}
+                    {...set}
+                    onDeleteQuestion={(qId) => handleDeleteQuestion(set.id, qId)}
+                    onPlayQuestion={handlePlayAudio}
+                    onDeleteSet={handleDeleteSet}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
-        {isLoading ? (
-          <div className="flex justify-center py-16">
-            <div className="text-muted-foreground">로딩 중...</div>
-          </div>
-        ) : testSets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <img 
-              src={emptyStateImage} 
-              alt="Empty state" 
-              className="w-64 h-64 object-contain mb-6"
-            />
-            <h3 className="text-xl font-semibold text-foreground mb-2">
-              아직 세트가 없습니다
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              새 세트 만들기 버튼을 눌러 시작하세요
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-6">
-            {testSets.map(set => (
-              <TestSetCard
-                key={set.id}
-                {...set}
-                onDeleteQuestion={(qId) => handleDeleteQuestion(set.id, qId)}
-                onPlayQuestion={handlePlayAudio}
-                onDeleteSet={handleDeleteSet}
-              />
-            ))}
-          </div>
-        )}
+          <TabsContent value="submissions">
+            {submissionsLoading ? (
+              <div className="flex justify-center py-16">
+                <div className="text-muted-foreground">로딩 중...</div>
+              </div>
+            ) : submissions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  아직 제출 내역이 없습니다
+                </h3>
+                <p className="text-muted-foreground">
+                  학생이 응시를 완료하면 여기에 표시됩니다
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {submissions.map(submission => (
+                  <Card key={submission.id} className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-foreground mb-1" data-testid={`text-student-name-${submission.id}`}>
+                          {submission.studentName}
+                        </h3>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p data-testid={`text-test-name-${submission.id}`}>
+                            테스트: {submission.testSetName}
+                          </p>
+                          <p data-testid={`text-language-${submission.id}`}>
+                            언어: {submission.language}
+                          </p>
+                          <p data-testid={`text-recording-count-${submission.id}`}>
+                            녹음 파일: {submission.recordingCount}개
+                          </p>
+                          <p data-testid={`text-submitted-at-${submission.id}`}>
+                            제출 시간: {new Date(submission.submittedAt).toLocaleString('ko-KR')}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        data-testid={`button-download-${submission.id}`}
+                      >
+                        다운로드
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
