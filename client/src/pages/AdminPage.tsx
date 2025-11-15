@@ -1,9 +1,9 @@
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, LogOut } from "lucide-react";
 import { useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import FileUploadZone from "@/components/admin/FileUploadZone";
@@ -21,15 +21,35 @@ export default function AdminPage() {
   const [selectedLanguage, setSelectedLanguage] = useState(LANGUAGES[0]);
   const [testName, setTestName] = useState("");
   const [activeTab, setActiveTab] = useState("test-sets");
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const { toast } = useToast();
+
+  // Check authentication status on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/admin/check');
+        const data = await response.json();
+        if (data.authenticated) {
+          setIsAuthenticated(true);
+        } else {
+          setLocation('/admin/login');
+        }
+      } catch (error) {
+        setLocation('/admin/login');
+      }
+    };
+    checkAuth();
+  }, [setLocation]);
 
   const { data: testSets = [], isLoading } = useQuery<TestSet[]>({
     queryKey: ['/api/test-sets'],
+    enabled: isAuthenticated === true,
   });
 
   const { data: submissions = [], isLoading: submissionsLoading } = useQuery<Submission[]>({
     queryKey: ['/api/submissions'],
-    enabled: activeTab === 'submissions',
+    enabled: activeTab === 'submissions' && isAuthenticated === true,
   });
 
   const createTestSetMutation = useMutation({
@@ -214,6 +234,36 @@ export default function AdminPage() {
     });
   };
 
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/admin/logout', {
+        method: 'POST',
+      });
+      if (response.ok) {
+        toast({
+          title: "로그아웃",
+          description: "로그아웃되었습니다.",
+        });
+        setLocation('/');
+      }
+    } catch (error) {
+      toast({
+        title: "오류",
+        description: "로그아웃 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Show loading state while checking authentication
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-muted-foreground">로딩 중...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b border-border sticky top-0 bg-background z-10">
@@ -232,15 +282,25 @@ export default function AdminPage() {
                 관리자 페이지
               </h1>
             </div>
-            {activeTab === 'test-sets' && (
+            <div className="flex items-center gap-2">
+              {activeTab === 'test-sets' && (
+                <Button
+                  onClick={() => setShowUpload(!showUpload)}
+                  data-testid="button-new-set"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  새 세트 만들기
+                </Button>
+              )}
               <Button
-                onClick={() => setShowUpload(!showUpload)}
-                data-testid="button-new-set"
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                data-testid="button-logout"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                새 세트 만들기
+                <LogOut className="w-5 h-5" />
               </Button>
-            )}
+            </div>
           </div>
         </div>
       </div>

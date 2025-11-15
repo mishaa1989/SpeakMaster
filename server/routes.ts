@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./file-storage";
 import multer from "multer";
@@ -16,9 +16,18 @@ const upload = multer({
   }
 });
 
+// Authentication middleware
+const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  if (req.session.isAdminAuthenticated === true) {
+    next();
+  } else {
+    res.status(401).json({ error: 'Unauthorized' });
+  }
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get all test sets
-  app.get('/api/test-sets', async (req, res) => {
+  // Get all test sets - Admin only
+  app.get('/api/test-sets', requireAuth, async (req, res) => {
     try {
       const testSets = await storage.getAllTestSets();
       res.json(testSets);
@@ -40,8 +49,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create new test set with MP3 uploads
-  app.post('/api/test-sets', upload.array('files', 50), async (req, res) => {
+  // Create new test set with MP3 uploads - Admin only
+  app.post('/api/test-sets', requireAuth, upload.array('files', 50), async (req, res) => {
     try {
       const files = req.files as Express.Multer.File[];
       if (!files || files.length === 0) {
@@ -92,8 +101,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete test set
-  app.delete('/api/test-sets/:id', async (req, res) => {
+  // Delete test set - Admin only
+  app.delete('/api/test-sets/:id', requireAuth, async (req, res) => {
     try {
       const deleted = await storage.deleteTestSet(req.params.id);
       if (!deleted) {
@@ -105,8 +114,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete question from test set
-  app.delete('/api/test-sets/:testSetId/questions/:questionId', async (req, res) => {
+  // Delete question from test set - Admin only
+  app.delete('/api/test-sets/:testSetId/questions/:questionId', requireAuth, async (req, res) => {
     try {
       const { testSetId, questionId } = req.params;
       const deleted = await storage.deleteQuestion(testSetId, questionId);
@@ -138,8 +147,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all submissions
-  app.get('/api/submissions', async (req, res) => {
+  // Get all submissions - Admin only
+  app.get('/api/submissions', requireAuth, async (req, res) => {
     try {
       const submissions = await storage.getAllSubmissions();
       res.json(submissions);
@@ -149,8 +158,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get a specific submission
-  app.get('/api/submissions/:id', async (req, res) => {
+  // Get a specific submission - Admin only
+  app.get('/api/submissions/:id', requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
       const submission = await storage.getSubmission(id);
@@ -166,8 +175,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete submission
-  app.delete('/api/submissions/:id', async (req, res) => {
+  // Delete submission - Admin only
+  app.delete('/api/submissions/:id', requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
       const deleted = await storage.deleteSubmission(id);
@@ -181,8 +190,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Download submission recordings as ZIP
-  app.get('/api/submissions/:id/download', async (req, res) => {
+  // Download submission recordings as ZIP - Admin only
+  app.get('/api/submissions/:id/download', requireAuth, async (req, res) => {
     const { id } = req.params;
     const submission = await storage.getSubmission(id);
     
@@ -283,6 +292,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error submitting test:', error);
       res.status(500).json({ error: 'Failed to submit test' });
+    }
+  });
+
+  // Admin login routes
+  app.post('/api/admin/login', async (req, res) => {
+    try {
+      const { password } = req.body;
+      const adminPassword = process.env.ADMIN_PASSWORD;
+
+      if (!adminPassword) {
+        return res.status(500).json({ error: 'Admin password not configured' });
+      }
+
+      if (password === adminPassword) {
+        req.session.isAdminAuthenticated = true;
+        res.json({ success: true, message: 'Login successful' });
+      } else {
+        res.status(401).json({ error: 'Invalid password' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Login failed' });
+    }
+  });
+
+  app.post('/api/admin/logout', async (req, res) => {
+    try {
+      req.session.destroy((err) => {
+        if (err) {
+          return res.status(500).json({ error: 'Logout failed' });
+        }
+        res.json({ success: true, message: 'Logout successful' });
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Logout failed' });
+    }
+  });
+
+  app.get('/api/admin/check', async (req, res) => {
+    try {
+      const isAuthenticated = req.session.isAdminAuthenticated === true;
+      res.json({ authenticated: isAuthenticated });
+    } catch (error) {
+      res.status(500).json({ error: 'Check failed' });
     }
   });
 
