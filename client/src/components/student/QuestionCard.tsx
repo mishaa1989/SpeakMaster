@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Send } from "lucide-react";
 import AutoRecordingPlayer from "./AutoRecordingPlayer";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface QuestionCardProps {
   questionNumber: number;
@@ -21,6 +21,7 @@ export default function QuestionCard({
 }: QuestionCardProps) {
   const [recording, setRecording] = useState<Blob | null>(null);
   const isLastQuestion = questionNumber === totalQuestions;
+  const hasAutoMovedRef = useRef(false);
 
   const handleNext = () => {
     if (recording) {
@@ -32,9 +33,10 @@ export default function QuestionCard({
     }
   };
 
-  // 녹음 완료되면 자동으로 다음 문제로 이동
+  // 녹음 완료되면 자동으로 다음 문제로 이동 (한 번만)
   useEffect(() => {
-    if (recording && !isLastQuestion) {
+    if (recording && !isLastQuestion && !hasAutoMovedRef.current) {
+      hasAutoMovedRef.current = true;
       const timer = setTimeout(() => {
         onNext(recording);
       }, 1000); // 1초 대기 후 자동 이동
@@ -42,6 +44,12 @@ export default function QuestionCard({
       return () => clearTimeout(timer);
     }
   }, [recording, isLastQuestion, onNext]);
+  
+  // 문제가 변경되면 리셋
+  useEffect(() => {
+    hasAutoMovedRef.current = false;
+    setRecording(null);
+  }, [questionNumber]);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
