@@ -8,9 +8,16 @@ import { useToast } from "@/hooks/use-toast";
 import type { TestSet } from "@shared/schema";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const LANGUAGES = ["영어", "중국어", "러시아어", "독일어", "프랑스어"];
 
 export default function StudentTestPage() {
   const [, setLocation] = useLocation();
+  const [studentName, setStudentName] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState("");
   const [selectedTestSetId, setSelectedTestSetId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [recordings, setRecordings] = useState<Blob[]>([]);
@@ -27,11 +34,13 @@ export default function StudentTestPage() {
   });
 
   const submitTestMutation = useMutation({
-    mutationFn: async (data: { testSetId: string; recordings: Blob[] }) => {
+    mutationFn: async (data: { testSetId: string; recordings: Blob[]; studentName: string; language: string }) => {
       console.log('Submitting test with', data.recordings.length, 'recordings');
       
       const formData = new FormData();
       formData.append('testSetId', data.testSetId);
+      formData.append('studentName', data.studentName);
+      formData.append('language', data.language);
       
       data.recordings.forEach((blob, index) => {
         console.log(`Recording ${index + 1}:`, blob.size, 'bytes, type:', blob.type);
@@ -82,12 +91,98 @@ export default function StudentTestPage() {
       submitTestMutation.mutate({
         testSetId: selectedTestSetId,
         recordings: allRecordings,
+        studentName,
+        language: selectedLanguage,
       });
     }
   };
 
   if (isComplete) {
     return <CompletionScreen onBackToHome={() => setLocation('/')} />;
+  }
+
+  // Student info input screen
+  if (!studentName || !selectedLanguage) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md w-full p-8">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-semibold text-foreground mb-2">
+              학생 정보 입력
+            </h1>
+            <p className="text-muted-foreground">
+              응시자 정보를 입력해주세요
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="student-name">이름</Label>
+              <Input
+                id="student-name"
+                placeholder="홍길동"
+                value={studentName}
+                onChange={(e) => setStudentName(e.target.value)}
+                data-testid="input-student-name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="language">응시 언어</Label>
+              <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                <SelectTrigger id="language" data-testid="select-language">
+                  <SelectValue placeholder="언어를 선택하세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LANGUAGES.map((lang) => (
+                    <SelectItem key={lang} value={lang}>
+                      {lang}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setLocation('/')}
+                data-testid="button-cancel"
+              >
+                취소
+              </Button>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  if (!studentName.trim()) {
+                    toast({
+                      title: "오류",
+                      description: "이름을 입력해주세요.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  if (!selectedLanguage) {
+                    toast({
+                      title: "오류",
+                      description: "언어를 선택해주세요.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  // Validation passed, will show test selection
+                }}
+                disabled={!studentName.trim() || !selectedLanguage}
+                data-testid="button-continue"
+              >
+                계속하기
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
   }
 
   if (!selectedTestSetId) {

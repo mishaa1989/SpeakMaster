@@ -1,4 +1,4 @@
-import { type TestSet, type Question } from "@shared/schema";
+import { type TestSet, type Question, type Submission } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { promises as fs } from "fs";
 import path from "path";
@@ -7,12 +7,15 @@ const DATA_DIR = path.join(process.cwd(), "data");
 const TEST_SETS_FILE = path.join(DATA_DIR, "test-sets.json");
 const AUDIO_DIR = path.join(DATA_DIR, "audio");
 const RECORDINGS_DIR = path.join(DATA_DIR, "recordings");
+const SUBMISSIONS_DIR = path.join(DATA_DIR, "submissions");
 
 interface StorageData {
   testSets: Record<string, TestSet>;
   questionAudio: Record<string, Record<string, string>>; // testSetId -> questionId -> base64
   studentRecordings: Record<string, string>; // recordingId -> base64
   testStudentRecordings: Record<string, Record<string, string>>; // testSetId -> questionId -> recordingId
+  submissions: Record<string, Submission>; // submissionId -> Submission
+  submissionRecordings: Record<string, Record<string, string>>; // submissionId -> recordingIndex -> base64
 }
 
 export interface IStorage {
@@ -27,6 +30,10 @@ export interface IStorage {
   saveStudentRecording(testSetId: string, questionId: string, blob: Buffer): Promise<string>;
   getStudentRecording(recordingId: string): Promise<Buffer | undefined>;
   getAllStudentRecordingsForTest(testSetId: string): Promise<Map<string, Buffer>>;
+  saveSubmission(testSetId: string, testSetName: string, studentName: string, language: string, recordings: Buffer[]): Promise<Submission>;
+  getAllSubmissions(): Promise<Submission[]>;
+  getSubmission(id: string): Promise<Submission | undefined>;
+  getSubmissionRecording(submissionId: string, recordingIndex: number): Promise<Buffer | undefined>;
 }
 
 export class FileStorage implements IStorage {
@@ -35,6 +42,8 @@ export class FileStorage implements IStorage {
     questionAudio: {},
     studentRecordings: {},
     testStudentRecordings: {},
+    submissions: {},
+    submissionRecordings: {},
   };
 
   constructor() {
@@ -46,6 +55,7 @@ export class FileStorage implements IStorage {
       await fs.mkdir(DATA_DIR, { recursive: true });
       await fs.mkdir(AUDIO_DIR, { recursive: true });
       await fs.mkdir(RECORDINGS_DIR, { recursive: true });
+      await fs.mkdir(SUBMISSIONS_DIR, { recursive: true });
       await this.load();
     } catch (err) {
       console.error("Failed to initialize storage:", err);
@@ -56,6 +66,9 @@ export class FileStorage implements IStorage {
     try {
       const content = await fs.readFile(TEST_SETS_FILE, "utf-8");
       this.data = JSON.parse(content);
+      // Ensure all fields exist for backward compatibility
+      if (!this.data.submissions) this.data.submissions = {};
+      if (!this.data.submissionRecordings) this.data.submissionRecordings = {};
     } catch (err) {
       // File doesn't exist yet, use empty data
       this.data = {
@@ -63,6 +76,8 @@ export class FileStorage implements IStorage {
         questionAudio: {},
         studentRecordings: {},
         testStudentRecordings: {},
+        submissions: {},
+        submissionRecordings: {},
       };
     }
   }
@@ -185,6 +200,55 @@ export class FileStorage implements IStorage {
     }
     
     return result;
+  }
+
+  async saveSubmission(
+    testSetId: string,
+    testSetName: string,
+    studentName: string,
+    language: string,
+    recordings: Buffer[]
+  ): Promise<Submission> {
+    const id = randomUUID();
+    const recordingFiles: string[] = [];
+
+    // Save each recording
+    if (!this.data.submissionRecordings[id]) {
+      this.data.submissionRecordings[id] = {};
+    }
+
+    recordings.forEach((buffer, index) => {
+      this.data.submissionRecordings[id][index.toString()] = buffer.toString('base64');
+      recordingFiles.push(`${id}_${index}.webm`);
+    });
+
+    const submission: Submission = {
+      id,
+      testSetId,
+      testSetName,
+      studentName,
+      language,
+      submittedAt: new Date().toISOString(),
+      recordingFiles,
+    };
+
+    this.data.submissions[id] = submission;
+    await this.save();
+    return submission;
+  }
+
+  async getAllSubmissions(): Promise<Submission[]> {
+    return Object.values(this.data.submissions);
+  }
+
+  async getSubmission(id: string): Promise<Submission | undefined> {
+    return this.data.submissions[id];
+  }
+
+  async getSubmissionRecording(submissionId: string, recordingIndex: number): Promise<Buffer | undefined> {
+    const recording = this.data.submissionRecordings[submissionId]?.[recordingIndex.toString()];
+    if (!recording) return undefined;
+    return Buffer.from(recording, 'base64');
   }
 }
 

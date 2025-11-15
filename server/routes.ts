@@ -3,7 +3,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./file-storage";
 import multer from "multer";
 import { insertTestSetSchema } from "@shared/schema";
-import nodemailer from "nodemailer";
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -142,10 +141,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Files:', req.files);
       
       const files = req.files as Express.Multer.File[];
-      const { testSetId } = req.body;
+      const { testSetId, studentName, language } = req.body;
 
-      if (!testSetId) {
-        console.error('Missing testSetId');
+      if (!testSetId || !studentName || !language) {
+        console.error('Missing required fields');
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
@@ -154,61 +153,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'No recordings submitted' });
       }
       
-      console.log(`Received ${files.length} recording files`);
+      console.log(`Received ${files.length} recording files from ${studentName} for language: ${language}`);
 
       const testSet = await storage.getTestSet(testSetId);
       if (!testSet) {
         return res.status(404).json({ error: 'Test set not found' });
       }
-      
-      const instructorEmail = testSet.instructorEmail;
 
-      // Save student recordings
-      for (let i = 0; i < files.length; i++) {
-        const questionId = testSet.questions[i]?.id;
-        if (questionId) {
-          await storage.saveStudentRecording(testSetId, questionId, files[i].buffer);
-        }
-      }
+      // Save submission
+      const recordings = files.map(file => file.buffer);
+      const submission = await storage.saveSubmission(
+        testSetId,
+        testSet.name,
+        studentName,
+        language,
+        recordings
+      );
 
-      // Send email with recordings
-      try {
-        const transporter = nodemailer.createTransport({
-          host: 'smtp.gmail.com',
-          port: 587,
-          secure: false,
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASSWORD,
-          },
-        });
-
-        const attachments = files.map((file, index) => ({
-          filename: `question_${index + 1}_answer.webm`,
-          content: file.buffer,
-        }));
-
-        await transporter.sendMail({
-          from: process.env.EMAIL_USER,
-          to: instructorEmail,
-          subject: `모의 OPIC 테스트 제출 - ${testSet.name}`,
-          text: `학생이 ${testSet.name}을 완료했습니다. 총 ${files.length}개의 답변이 첨부되어 있습니다.`,
-          html: `
-            <h2>모의 OPIC 테스트 제출</h2>
-            <p><strong>테스트:</strong> ${testSet.name}</p>
-            <p><strong>제출 시간:</strong> ${new Date().toLocaleString('ko-KR')}</p>
-            <p><strong>답변 수:</strong> ${files.length}개</p>
-            <p>첨부된 녹음 파일을 확인해주세요.</p>
-          `,
-          attachments,
-        });
-
-        res.json({ success: true, message: 'Test submitted successfully' });
-      } catch (emailError) {
-        console.error('Email error:', emailError);
-        // Still return success even if email fails
-        res.json({ success: true, message: 'Test submitted (email pending)' });
-      }
+      console.log(`Submission saved with ID: ${submission.id}`);
+      res.json({ success: true, message: 'Test submitted successfully', submissionId: submission.id });
     } catch (error) {
       console.error('Error submitting test:', error);
       res.status(500).json({ error: 'Failed to submit test' });
