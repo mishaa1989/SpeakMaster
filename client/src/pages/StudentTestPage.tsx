@@ -29,11 +29,14 @@ export default function StudentTestPage() {
 
   const submitTestMutation = useMutation({
     mutationFn: async (data: { testSetId: string; recordings: Blob[]; email: string }) => {
+      console.log('Submitting test with', data.recordings.length, 'recordings');
+      
       const formData = new FormData();
       formData.append('testSetId', data.testSetId);
       formData.append('instructorEmail', data.email);
       
       data.recordings.forEach((blob, index) => {
+        console.log(`Recording ${index + 1}:`, blob.size, 'bytes, type:', blob.type);
         formData.append('recordings', blob, `recording_${index + 1}.webm`);
       });
 
@@ -43,6 +46,8 @@ export default function StudentTestPage() {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Submit failed:', response.status, errorText);
         throw new Error('Failed to submit test');
       }
 

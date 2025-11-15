@@ -133,16 +133,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Submit student recordings
   app.post('/api/submit-test', upload.array('recordings', 15), async (req, res) => {
     try {
+      console.log('Submit test request received');
+      console.log('Body:', req.body);
+      console.log('Files:', req.files);
+      
       const files = req.files as Express.Multer.File[];
       const { testSetId, instructorEmail } = req.body;
 
       if (!testSetId || !instructorEmail) {
+        console.error('Missing fields - testSetId:', testSetId, 'instructorEmail:', instructorEmail);
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
       if (!files || files.length === 0) {
+        console.error('No files received');
         return res.status(400).json({ error: 'No recordings submitted' });
       }
+      
+      console.log(`Received ${files.length} recording files`);
 
       const testSet = await storage.getTestSet(testSetId);
       if (!testSet) {
