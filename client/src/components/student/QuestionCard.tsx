@@ -65,6 +65,7 @@ export default function QuestionCard({
           </div>
 
           <AutoRecordingPlayer
+            key={questionNumber}
             audioUrl={audioUrl}
             onRecordingComplete={setRecording}
           />
