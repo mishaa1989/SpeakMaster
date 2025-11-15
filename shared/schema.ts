@@ -75,9 +75,21 @@ export interface TestSubmission {
   instructorEmail: string;
 }
 
+// Submission stored in file system
+export interface Submission {
+  id: string;
+  testSetId: string;
+  testSetName: string;
+  studentName: string;
+  language: string;
+  submittedAt: string;
+  recordingFiles: string[]; // Array of file paths
+}
+
 export const submitTestSchema = z.object({
   testSetId: z.string(),
-  instructorEmail: z.string().email(),
+  studentName: z.string().min(1),
+  language: z.string().min(1),
 });
 
 export type SubmitTest = z.infer<typeof submitTestSchema>;
