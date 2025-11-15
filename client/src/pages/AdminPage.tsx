@@ -11,10 +11,14 @@ import emptyStateImage from "@assets/generated_images/Empty_state_educational_il
 import { useToast } from "@/hooks/use-toast";
 import type { TestSet } from "@shared/schema";
 
+const LANGUAGES = ["영어", "중국어", "러시아어", "독일어", "프랑스어"];
+
 export default function AdminPage() {
   const [, setLocation] = useLocation();
   const [showUpload, setShowUpload] = useState(false);
   const [instructorEmail, setInstructorEmail] = useState("mishaa1989@naver.com");
+  const [selectedLanguage, setSelectedLanguage] = useState(LANGUAGES[0]);
+  const [testName, setTestName] = useState("");
   const { toast } = useToast();
 
   const { data: testSets = [], isLoading } = useQuery<TestSet[]>({
@@ -119,8 +123,6 @@ export default function AdminPage() {
   };
 
   const handleFilesSelected = async (files: File[]) => {
-    const name = `모의고사 세트 ${(testSets?.length || 0) + 1}`;
-    
     if (!instructorEmail) {
       toast({
         title: "오류",
@@ -129,6 +131,17 @@ export default function AdminPage() {
       });
       return;
     }
+
+    if (!testName.trim()) {
+      toast({
+        title: "오류",
+        description: "테스트 이름을 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const name = `${selectedLanguage} - ${testName}`;
     
     try {
       // Get duration for each file
@@ -137,6 +150,10 @@ export default function AdminPage() {
       );
       
       createTestSetMutation.mutate({ name, files, durations, instructorEmail });
+      
+      // Reset form
+      setTestName("");
+      setSelectedLanguage(LANGUAGES[0]);
     } catch (error) {
       toast({
         title: "오류",
@@ -215,9 +232,46 @@ export default function AdminPage() {
               </p>
             </Card>
             
+            <Card className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  언어 선택
+                </label>
+                <select
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                  className="w-full px-4 py-2 rounded-md border border-input bg-background text-foreground"
+                  data-testid="select-language"
+                >
+                  {LANGUAGES.map((lang) => (
+                    <option key={lang} value={lang}>
+                      {lang}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  테스트 이름
+                </label>
+                <input
+                  type="text"
+                  value={testName}
+                  onChange={(e) => setTestName(e.target.value)}
+                  placeholder="예: 진단 평가 1"
+                  className="w-full px-4 py-2 rounded-md border border-input bg-background text-foreground"
+                  data-testid="input-test-name"
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  최종 이름: {selectedLanguage} - {testName || "(이름 입력)"}
+                </p>
+              </div>
+            </Card>
+            
             <Card>
               <CardHeader>
-                <h2 className="text-lg font-semibold">새 모의고사 세트 업로드</h2>
+                <h2 className="text-lg font-semibold">MP3 파일 업로드</h2>
                 <p className="text-sm text-muted-foreground mt-1">
                   15개의 MP3 파일을 업로드하세요
                 </p>
