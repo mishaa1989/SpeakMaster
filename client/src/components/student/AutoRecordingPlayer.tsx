@@ -222,37 +222,15 @@ export default function AutoRecordingPlayer({ audioUrl, onRecordingComplete }: A
               </div>
             </>
           ) : status === 'complete' ? (
-            <>
-              <div className="flex gap-4">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="w-16 h-16 rounded-full"
-                  onClick={playRecording}
-                  data-testid="button-play-recording"
-                >
-                  <Play className="w-8 h-8 ml-1" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="default"
-                  className="w-16 h-16 rounded-full"
-                  onClick={restartRecording}
-                  data-testid="button-rerecord"
-                >
-                  <Play className="w-8 h-8 ml-1" />
-                </Button>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-foreground">녹음 완료</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  재생하거나 다시 녹음할 수 있습니다
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  녹음 시간: {formatTime(recordingTime)}
-                </p>
-              </div>
-            </>
+            <div className="text-center py-4">
+              <p className="text-lg font-medium text-foreground">✓ 녹음 완료</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                녹음 시간: {formatTime(recordingTime)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                잠시 후 다음 문제로 이동합니다...
+              </p>
+            </div>
           ) : (
             <div className="text-center py-4">
               <p className="text-sm text-muted-foreground">

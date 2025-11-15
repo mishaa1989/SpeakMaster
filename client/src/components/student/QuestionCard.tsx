@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Send } from "lucide-react";
 import AutoRecordingPlayer from "./AutoRecordingPlayer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface QuestionCardProps {
   questionNumber: number;
@@ -32,6 +32,17 @@ export default function QuestionCard({
     }
   };
 
+  // 녹음 완료되면 자동으로 다음 문제로 이동
+  useEffect(() => {
+    if (recording && !isLastQuestion) {
+      const timer = setTimeout(() => {
+        onNext(recording);
+      }, 1000); // 1초 대기 후 자동 이동
+      
+      return () => clearTimeout(timer);
+    }
+  }, [recording, isLastQuestion, onNext]);
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <Card className="p-8" data-testid="card-question">
@@ -50,24 +61,17 @@ export default function QuestionCard({
             onRecordingComplete={setRecording}
           />
 
-          <Button
-            className="w-full px-8 py-6 text-base"
-            onClick={handleNext}
-            disabled={!recording}
-            data-testid={isLastQuestion ? "button-submit" : "button-next"}
-          >
-            {isLastQuestion ? (
-              <>
-                <Send className="w-5 h-5 mr-2" />
-                제출하기
-              </>
-            ) : (
-              <>
-                다음 문제
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </>
-            )}
-          </Button>
+          {isLastQuestion && (
+            <Button
+              className="w-full px-8 py-6 text-base"
+              onClick={handleNext}
+              disabled={!recording}
+              data-testid="button-submit"
+            >
+              <Send className="w-5 h-5 mr-2" />
+              제출하기
+            </Button>
+          )}
         </div>
       </Card>
     </div>
