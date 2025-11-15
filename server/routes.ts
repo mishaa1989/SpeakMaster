@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./file-storage";
 import multer from "multer";
 import { insertTestSetSchema } from "@shared/schema";
+import archiver from "archiver";
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -158,6 +159,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching submission:', error);
       res.status(500).json({ error: 'Failed to fetch submission' });
+    }
+  });
+
+  // Download submission recordings as ZIP
+  app.get('/api/submissions/:id/download', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const submission = await storage.getSubmission(id);
+      
+      if (!submission) {
+        return res.status(404).json({ error: 'Submission not found' });
+      }
+
+      // Create archive
+      const archive = archiver('zip', {
+        zlib: { level: 9 }
+      });
+
+      // Set response headers
+      const filename = `${submission.studentName}_${submission.testSetName}_${new Date(submission.submittedAt).toISOString().split('T')[0]}.zip`;
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+
+      // Pipe archive to response
+      archive.pipe(res);
+
+      // Add each recording to the archive
+      for (let i = 0; i < submission.recordingCount; i++) {
+        const recording = await storage.getSubmissionRecording(id, i);
+        if (recording) {
+          archive.append(recording, { name: `question_${i + 1}.webm` });
+        }
+      }
+
+      // Finalize the archive
+      await archive.finalize();
+    } catch (error) {
+      console.error('Error downloading submission:', error);
+      res.status(500).json({ error: 'Failed to download submission' });
     }
   });
 

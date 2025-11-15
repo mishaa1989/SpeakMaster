@@ -4,10 +4,10 @@
 
 Mock OPIC LMS is a web-based learning management system designed for administering and taking OPIC (Oral Proficiency Interview by Computer) mock tests. The application serves two primary user roles:
 
-1. **Administrators** - Create and manage test sets by uploading MP3 audio files containing questions
-2. **Students** - Take tests by listening to audio questions and recording spoken responses
+1. **Administrators** - Create and manage test sets by uploading 1-50 MP3 audio files containing questions, and download student submissions as ZIP files
+2. **Students** - Take tests by listening to audio questions and recording spoken responses, after providing their name and language selection
 
-The system enables asynchronous language assessment by capturing student recordings and delivering them to instructors via email. The application prioritizes simplicity and focus during test-taking, following Material Design principles adapted for educational contexts.
+The system enables asynchronous language assessment by capturing student recordings and storing them for instructor download. The application prioritizes simplicity and focus during test-taking, following Material Design principles adapted for educational contexts.
 
 ## User Preferences
 
@@ -44,19 +44,22 @@ Preferred communication style: Simple, everyday language.
 **API Structure**: RESTful API with the following endpoints:
 - `GET /api/test-sets` - Retrieve all test sets
 - `GET /api/test-sets/:id` - Retrieve a specific test set
-- `POST /api/test-sets` - Create new test set with MP3 uploads
-- `POST /api/submit-test` - Submit student recordings
+- `POST /api/test-sets` - Create new test set with MP3 uploads (1-50 files)
+- `GET /api/submissions` - Retrieve all student submissions
+- `GET /api/submissions/:id` - Retrieve a specific submission
+- `GET /api/submissions/:id/download` - Download submission recordings as ZIP
+- `POST /api/submit-test` - Submit student recordings with name and language
 
 **File Upload Handling**: Multer middleware configured for:
 - Memory storage (files stored in memory as buffers)
 - Audio file filtering (accepts only audio/mpeg and audio/mp3)
-- Multi-file upload support (up to 15 files per test set)
+- Multi-file upload support (1-50 files per test set)
 
-**Storage Layer**: In-memory storage implementation using Maps for rapid development. The `IStorage` interface defines the contract for:
+**Storage Layer**: File-based JSON storage implementation with base64-encoded audio for persistence. The `IStorage` interface defines the contract for:
 - Test set CRUD operations
 - Question audio storage and retrieval
-- Student recording management
-- Associations between tests and recordings
+- Student submission management with metadata (name, language, timestamp)
+- ZIP file generation for downloading student recordings
 
 **Development Server**: Custom Vite integration in development mode with:
 - Middleware mode for HMR (Hot Module Replacement)
@@ -68,10 +71,10 @@ Preferred communication style: Simple, everyday language.
 **Type System**: Zod for runtime validation with TypeScript type inference.
 
 **Core Entities**:
-- `TestSet`: Contains id, name, createdAt date, and array of questions
+- `TestSet`: Contains id, name, createdAt date, instructorEmail, and array of questions
 - `Question`: Contains id, filename, duration, url, and order
+- `Submission`: Contains id, testSetId, testSetName, studentName, language, submittedAt timestamp, and recordingCount
 - `Recording`: Links questionId with recorded blob data
-- `TestSubmission`: Aggregates testSetId, recordings array, and instructor email
 
 **Validation**: Input validation using Zod schemas for test creation and submission endpoints.
 
@@ -90,9 +93,9 @@ Preferred communication style: Simple, everyday language.
 - DATABASE_URL environment variable required for database connection
 - Note: Current implementation uses in-memory storage; database integration is configured but not actively used
 
-**Email Service**:
-- Nodemailer for sending student recordings to instructors
-- Email configuration details not visible in provided code but imported in routes
+**File Export**:
+- Archiver library for creating ZIP files of student recordings
+- ZIP files include all student recordings named question_1.webm, question_2.webm, etc.
 
 **Form Management**:
 - React Hook Form with @hookform/resolvers for form state and validation

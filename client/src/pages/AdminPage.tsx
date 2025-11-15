@@ -376,6 +376,9 @@ export default function AdminPage() {
                       </div>
                       <Button
                         variant="outline"
+                        onClick={() => {
+                          window.location.href = `/api/submissions/${submission.id}/download`;
+                        }}
                         data-testid={`button-download-${submission.id}`}
                       >
                         다운로드
