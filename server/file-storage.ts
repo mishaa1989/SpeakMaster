@@ -19,7 +19,7 @@ interface StorageData {
 }
 
 export interface IStorage {
-  createTestSet(name: string, instructorEmail: string, questions: Omit<Question, 'id'>[]): Promise<TestSet>;
+  createTestSet(name: string, instructorEmail: string, language: string, questions: Omit<Question, 'id'>[]): Promise<TestSet>;
   updateTestSetEmail(id: string, instructorEmail: string): Promise<boolean>;
   getTestSet(id: string): Promise<TestSet | undefined>;
   getAllTestSets(): Promise<TestSet[]>;
@@ -69,6 +69,34 @@ export class FileStorage implements IStorage {
       // Ensure all fields exist for backward compatibility
       if (!this.data.submissions) this.data.submissions = {};
       if (!this.data.submissionRecordings) this.data.submissionRecordings = {};
+      
+      // Migrate existing test sets to add language field
+      const languageMap: Record<string, string> = {
+        '영어': '영어',
+        '중국어': '중국어',
+        '러시아어': '러시아어',
+        '독일어': '독일어',
+        '프랑스어': '프랑스어',
+      };
+      
+      for (const testSet of Object.values(this.data.testSets)) {
+        if (!testSet.language) {
+          // Try to extract language from name (format: "언어 - 테스트명")
+          let detectedLanguage = '영어'; // Default to English
+          for (const [lang, value] of Object.entries(languageMap)) {
+            if (testSet.name.includes(lang)) {
+              detectedLanguage = value;
+              break;
+            }
+          }
+          testSet.language = detectedLanguage;
+        }
+      }
+      
+      // Save migrated data
+      if (Object.values(this.data.testSets).some(ts => ts.language)) {
+        await this.save();
+      }
     } catch (err) {
       // File doesn't exist yet, use empty data
       this.data = {
@@ -86,7 +114,7 @@ export class FileStorage implements IStorage {
     await fs.writeFile(TEST_SETS_FILE, JSON.stringify(this.data, null, 2));
   }
 
-  async createTestSet(name: string, instructorEmail: string, questions: Omit<Question, 'id'>[]): Promise<TestSet> {
+  async createTestSet(name: string, instructorEmail: string, language: string, questions: Omit<Question, 'id'>[]): Promise<TestSet> {
     const id = randomUUID();
     const questionsWithIds: Question[] = questions.map(q => ({
       ...q,
@@ -97,6 +125,7 @@ export class FileStorage implements IStorage {
       id,
       name,
       instructorEmail,
+      language,
       createdAt: new Date().toISOString().split('T')[0],
       questions: questionsWithIds,
     };

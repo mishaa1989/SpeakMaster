@@ -48,13 +48,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'No files uploaded' });
       }
 
-      const { name, durations, instructorEmail } = req.body;
+      const { name, durations, instructorEmail, language } = req.body;
       if (!name) {
         return res.status(400).json({ error: 'Test set name is required' });
       }
       
       if (!instructorEmail) {
         return res.status(400).json({ error: 'Instructor email is required' });
+      }
+
+      if (!language) {
+        return res.status(400).json({ error: 'Language is required' });
       }
 
       const parsedDurations = durations ? JSON.parse(durations) : [];
@@ -72,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         order: index + 1,
       }));
 
-      const testSet = await storage.createTestSet(name, instructorEmail, questions);
+      const testSet = await storage.createTestSet(name, instructorEmail, language, questions);
       
       // Store question audio files and update URLs
       for (let i = 0; i < files.length; i++) {

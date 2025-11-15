@@ -33,10 +33,11 @@ export default function AdminPage() {
   });
 
   const createTestSetMutation = useMutation({
-    mutationFn: async (data: { name: string; files: File[]; durations: number[]; instructorEmail: string }) => {
+    mutationFn: async (data: { name: string; files: File[]; durations: number[]; instructorEmail: string; language: string }) => {
       const formData = new FormData();
       formData.append('name', data.name);
       formData.append('instructorEmail', data.instructorEmail);
+      formData.append('language', data.language);
       formData.append('durations', JSON.stringify(data.durations));
       data.files.forEach(file => {
         formData.append('files', file);
@@ -156,7 +157,7 @@ export default function AdminPage() {
         files.map(file => getAudioDuration(file))
       );
       
-      createTestSetMutation.mutate({ name, files, durations, instructorEmail });
+      createTestSetMutation.mutate({ name, files, durations, instructorEmail, language: selectedLanguage });
       
       // Reset form
       setTestName("");

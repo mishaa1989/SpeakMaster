@@ -186,6 +186,9 @@ export default function StudentTestPage() {
   }
 
   if (!selectedTestSetId) {
+    // Filter test sets by selected language
+    const filteredTestSets = testSets.filter(set => set.language === selectedLanguage);
+
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="max-w-2xl w-full">
@@ -194,7 +197,7 @@ export default function StudentTestPage() {
               모의고사 선택
             </h1>
             <p className="text-muted-foreground">
-              응시할 모의고사를 선택하세요
+              응시할 모의고사를 선택하세요 ({selectedLanguage})
             </p>
           </div>
 
@@ -203,18 +206,21 @@ export default function StudentTestPage() {
               <div className="text-center py-8 text-muted-foreground">
                 로딩 중...
               </div>
-            ) : testSets.length === 0 ? (
+            ) : filteredTestSets.length === 0 ? (
               <Card className="p-8 text-center">
                 <p className="text-muted-foreground mb-4">
-                  현재 응시 가능한 모의고사가 없습니다
+                  {selectedLanguage} 언어로 된 응시 가능한 모의고사가 없습니다
                 </p>
-                <Button onClick={() => setLocation('/')} data-testid="button-back-home">
-                  홈으로 돌아가기
+                <Button onClick={() => {
+                  setStudentName("");
+                  setSelectedLanguage("");
+                }} data-testid="button-back">
+                  언어 다시 선택
                 </Button>
               </Card>
             ) : (
               <>
-                {testSets.map((set) => (
+                {filteredTestSets.map((set) => (
                   <Card
                     key={set.id}
                     className="p-6 hover-elevate cursor-pointer"

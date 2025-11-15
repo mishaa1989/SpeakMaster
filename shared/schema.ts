@@ -38,6 +38,7 @@ export interface TestSet {
   name: string;
   createdAt: string;
   instructorEmail: string;
+  language: string;
   questions: Question[];
 }
 
