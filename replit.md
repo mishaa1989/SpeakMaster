@@ -13,6 +13,16 @@ The system enables asynchronous language assessment by capturing student recordi
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (November 15, 2025)
+
+### Admin Login System
+- Implemented password-based authentication for admin access
+- Admin password stored in ADMIN_PASSWORD environment variable
+- Session-based authentication using express-session (24-hour cookie lifetime)
+- All admin endpoints protected with requireAuth middleware
+- Login flow: Home → Admin Login (/admin/login) → Admin Dashboard (/admin)
+- Logout button added to admin dashboard header
+
 ## System Architecture
 
 ### Frontend Architecture
