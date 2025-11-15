@@ -124,12 +124,12 @@ export default function StudentTestPage() {
                     key={set.id}
                     className="p-6 hover-elevate cursor-pointer"
                     onClick={() => {
-                      if (set.questions.length === 15) {
+                      if (set.questions.length > 0) {
                         setSelectedTestSetId(set.id);
                       } else {
                         toast({
                           title: "선택 불가",
-                          description: "이 세트는 아직 준비 중입니다.",
+                          description: "질문이 없는 테스트입니다.",
                           variant: "destructive",
                         });
                       }
@@ -142,10 +142,10 @@ export default function StudentTestPage() {
                           {set.name}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          질문 수: {set.questions.length}/15
+                          질문 수: {set.questions.length}개
                         </p>
                       </div>
-                      {set.questions.length === 15 && (
+                      {set.questions.length > 0 && (
                         <Button data-testid={`button-select-${set.id}`}>
                           선택하기
                         </Button>
