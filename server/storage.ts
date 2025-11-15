@@ -1,9 +1,14 @@
-import { type TestSet, type Question, testSets, questions, studentRecordings } from "@shared/schema";
+import { type TestSet, type Question, testSets, questions, studentRecordings, adminSettings } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
+  // Admin settings operations
+  isAdminPasswordSet(): Promise<boolean>;
+  setAdminPassword(passwordHash: string): Promise<void>;
+  getAdminPasswordHash(): Promise<string | undefined>;
+  
   // Test Set operations
   createTestSet(name: string, instructorEmail: string, questions: Omit<Question, 'id'>[]): Promise<TestSet>;
   updateTestSetEmail(id: string, instructorEmail: string): Promise<boolean>;
@@ -23,16 +28,30 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  private adminPasswordHash: string | undefined;
   private testSets: Map<string, TestSet>;
   private questionAudio: Map<string, Map<string, Buffer>>; // testSetId -> (questionId -> audio buffer)
   private studentRecordings: Map<string, Buffer>; // recordingId -> audio data
   private testStudentRecordings: Map<string, Map<string, string>>; // testSetId -> (questionId -> recordingId)
 
   constructor() {
+    this.adminPasswordHash = undefined;
     this.testSets = new Map();
     this.questionAudio = new Map();
     this.studentRecordings = new Map();
     this.testStudentRecordings = new Map();
+  }
+
+  async isAdminPasswordSet(): Promise<boolean> {
+    return this.adminPasswordHash !== undefined;
+  }
+
+  async setAdminPassword(passwordHash: string): Promise<void> {
+    this.adminPasswordHash = passwordHash;
+  }
+
+  async getAdminPasswordHash(): Promise<string | undefined> {
+    return this.adminPasswordHash;
   }
 
   async createTestSet(name: string, instructorEmail: string, questions: Omit<Question, 'id'>[]): Promise<TestSet> {
@@ -140,6 +159,21 @@ export class MemStorage implements IStorage {
 }
 
 export class DbStorage implements IStorage {
+  async isAdminPasswordSet(): Promise<boolean> {
+    const [settings] = await db.select().from(adminSettings).limit(1);
+    return settings !== undefined;
+  }
+
+  async setAdminPassword(passwordHash: string): Promise<void> {
+    await db.delete(adminSettings);
+    await db.insert(adminSettings).values({ passwordHash });
+  }
+
+  async getAdminPasswordHash(): Promise<string | undefined> {
+    const [settings] = await db.select().from(adminSettings).limit(1);
+    return settings?.passwordHash;
+  }
+
   async createTestSet(name: string, instructorEmail: string, questionsData: Omit<Question, 'id'>[]): Promise<TestSet> {
     // Create test set
     const [testSetRow] = await db.insert(testSets).values({

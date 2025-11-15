@@ -3,6 +3,12 @@ import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 
 // Drizzle Database Tables
+export const adminSettings = pgTable("admin_settings", {
+  id: serial("id").primaryKey(),
+  passwordHash: text("password_hash").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const testSets = pgTable("test_sets", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -28,6 +34,7 @@ export const studentRecordings = pgTable("student_recordings", {
 });
 
 // Type exports for database tables
+export type AdminSettingsRow = typeof adminSettings.$inferSelect;
 export type TestSetRow = typeof testSets.$inferSelect;
 export type QuestionRow = typeof questions.$inferSelect;
 export type StudentRecordingRow = typeof studentRecordings.$inferSelect;
