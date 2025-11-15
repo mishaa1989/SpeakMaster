@@ -164,41 +164,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Download submission recordings as ZIP
   app.get('/api/submissions/:id/download', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const submission = await storage.getSubmission(id);
-      
-      if (!submission) {
-        return res.status(404).json({ error: 'Submission not found' });
-      }
-
-      // Create archive
-      const archive = archiver('zip', {
-        zlib: { level: 9 }
-      });
-
-      // Set response headers
-      const filename = `${submission.studentName}_${submission.testSetName}_${new Date(submission.submittedAt).toISOString().split('T')[0]}.zip`;
-      res.setHeader('Content-Type', 'application/zip');
-      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
-
-      // Pipe archive to response
-      archive.pipe(res);
-
-      // Add each recording to the archive
-      for (let i = 0; i < submission.recordingCount; i++) {
-        const recording = await storage.getSubmissionRecording(id, i);
-        if (recording) {
-          archive.append(recording, { name: `question_${i + 1}.webm` });
-        }
-      }
-
-      // Finalize the archive
-      await archive.finalize();
-    } catch (error) {
-      console.error('Error downloading submission:', error);
-      res.status(500).json({ error: 'Failed to download submission' });
+    const { id } = req.params;
+    const submission = await storage.getSubmission(id);
+    
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
     }
+
+    // Create archive
+    const archive = archiver('zip', {
+      zlib: { level: 9 }
+    });
+
+    // Set response headers
+    const filename = `${submission.studentName}_${submission.testSetName}_${new Date(submission.submittedAt).toISOString().split('T')[0]}.zip`;
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+
+    // Handle archiver warnings and errors
+    archive.on('warning', (err) => {
+      if (err.code === 'ENOENT') {
+        console.warn('Archive warning:', err);
+      } else {
+        console.error('Archive warning (non-ENOENT):', err);
+      }
+    });
+
+    archive.on('error', (err) => {
+      console.error('Archiver error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to create archive' });
+      }
+    });
+
+    // Pipe archive to response
+    archive.pipe(res);
+
+    // Add each recording to the archive
+    console.log(`Adding ${submission.recordingCount} recordings to ZIP...`);
+    for (let i = 0; i < submission.recordingCount; i++) {
+      const recording = await storage.getSubmissionRecording(id, i);
+      if (recording) {
+        console.log(`  Recording ${i + 1}: ${recording.length} bytes`);
+        // Convert Buffer to Stream for archiver
+        const { Readable } = await import('stream');
+        const stream = Readable.from(recording);
+        archive.append(stream, { 
+          name: `question_${i + 1}.webm`
+        });
+      } else {
+        console.log(`  Recording ${i + 1}: NOT FOUND`);
+      }
+    }
+
+    // Finalize the archive (this signals no more files will be appended)
+    console.log('Finalizing archive...');
+    archive.finalize();
   });
 
   // Submit student recordings
