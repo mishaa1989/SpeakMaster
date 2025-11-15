@@ -118,8 +118,10 @@ export default function AutoRecordingPlayer({ audioUrl, onRecordingComplete }: A
 
     } catch (err) {
       console.error('Error starting workflow:', err);
+      console.error('Error details:', err instanceof Error ? err.message : String(err));
+      console.error('Error stack:', err instanceof Error ? err.stack : 'No stack trace');
       setStatus('ready');
-      alert('마이크 접근 권한이 필요합니다.');
+      alert('오류가 발생했습니다: ' + (err instanceof Error ? err.message : '알 수 없는 오류'));
     }
   };
 
