@@ -1,8 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Send } from "lucide-react";
-import AudioPlayer from "./AudioPlayer";
-import RecordingControls from "./RecordingControls";
+import AutoRecordingPlayer from "./AutoRecordingPlayer";
 import { useState } from "react";
 
 interface QuestionCardProps {
@@ -20,7 +19,6 @@ export default function QuestionCard({
   onNext,
   onSubmit,
 }: QuestionCardProps) {
-  const [listenComplete, setListenComplete] = useState(false);
   const [recording, setRecording] = useState<Blob | null>(null);
   const isLastQuestion = questionNumber === totalQuestions;
 
@@ -43,18 +41,12 @@ export default function QuestionCard({
               질문 {questionNumber}
             </h2>
             <p className="text-sm text-center text-muted-foreground">
-              질문을 듣고 답변을 녹음해주세요
+              질문 듣기를 클릭하면 자동으로 2번 재생 후 녹음이 시작됩니다
             </p>
           </div>
 
-          <AudioPlayer
+          <AutoRecordingPlayer
             audioUrl={audioUrl}
-            maxListens={2}
-            onListenComplete={() => setListenComplete(true)}
-          />
-
-          <RecordingControls
-            enabled={listenComplete}
             onRecordingComplete={setRecording}
           />
 
