@@ -74,7 +74,9 @@ export default function AutoRecordingPlayer({ audioUrl, onRecordingComplete }: A
         
         // Cleanup
         micStream.getTracks().forEach(track => track.stop());
-        audioContext.close();
+        if (audioContext.state !== 'closed') {
+          audioContext.close();
+        }
         
         if (timerRef.current) {
           clearInterval(timerRef.current);
@@ -152,7 +154,7 @@ export default function AutoRecordingPlayer({ audioUrl, onRecordingComplete }: A
       if (micStreamRef.current) {
         micStreamRef.current.getTracks().forEach(track => track.stop());
       }
-      if (audioContextRef.current) {
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close();
       }
     };
