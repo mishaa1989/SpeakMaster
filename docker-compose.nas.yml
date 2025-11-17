@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: centrum-taurus-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeMe123!}
+      POSTGRES_DB: centrum_taurus
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - centrum-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    # PC에서 빌드한 이미지 사용 (build 대신)
+    image: centrum-taurus:latest
+    container_name: centrum-taurus-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-ChangeMe123!}@postgres:5432/centrum_taurus
+      SESSION_SECRET: ${SESSION_SECRET:-ChangeThisToRandomSecretKey}
+      NODE_ENV: production
+      PORT: 5000
+    ports:
+      - "${APP_PORT:-5000}:5000"
+    networks:
+      - centrum-network
+    # NAS 리소스 제한 (선택사항 - 필요시 주석 해제)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2.0'
+    #       memory: 1G
+    #     reservations:
+    #       memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/api/admin/setup-required"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  centrum-network:
+    driver: bridge

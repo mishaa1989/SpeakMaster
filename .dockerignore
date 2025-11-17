@@ -1,10 +1,63 @@
+# Dependencies
 node_modules
+npm-debug.log
+
+# Git
 .git
 .gitignore
-*.md
+.gitattributes
+
+# Environment files
 .env
+.env.local
+.env.*.local
+
+# Replit
 .replit
 replit.nix
-data
+replit.md
+
+# Build artifacts (will be built inside Docker)
 dist
 .vite
+
+# Data files
+data
+*.db
+*.sqlite
+
+# Docker files (이미지에 불필요한 파일만 제외)
+*.tar
+
+# Build scripts (PC용 스크립트, 이미지에 불필요)
+build-for-nas.sh
+build-for-nas.bat
+
+# Documentation (이미지 크기 절약)
+*.md
+!README.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Test files
+coverage
+.nyc_output
+test
+tests
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts

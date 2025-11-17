@@ -19,7 +19,47 @@
 
 ## 🚀 NAS 서버 배포
 
-### 빠른 시작
+### ⚠️ 중요: NAS 성능 이슈 해결
+
+NAS에서 직접 빌드 시 `npm ci`에서 멈추는 문제가 있습니다.  
+**해결책:** PC에서 Docker 이미지를 빌드한 후 NAS로 전송하세요.
+
+### 방법 1: PC에서 빌드 (권장 ⭐)
+
+**NAS 성능이 부족하거나 빌드가 멈추는 경우**
+
+1. **Replit에서 다운로드**
+   ```
+   Tools → Download as zip
+   ```
+
+2. **PC에서 Docker 이미지 빌드**
+   
+   **Windows:**
+   ```powershell
+   # 프로젝트 폴더에서
+   .\build-for-nas.bat
+   ```
+   
+   **macOS/Linux:**
+   ```bash
+   # 프로젝트 폴더에서
+   chmod +x build-for-nas.sh
+   ./build-for-nas.sh
+   ```
+   
+   → `centrum-taurus.tar` 파일 생성 (약 500MB)
+
+3. **NAS로 TAR 파일 업로드**
+   - File Station으로 `/volume1/docker/centrum-taurus/` 폴더에 업로드
+
+4. **NAS Container Manager에서 실행**
+   - 상세 가이드: **[PC-DOCKER-BUILD.md](./PC-DOCKER-BUILD.md)** ← PC 빌드 방법
+   - 상세 가이드: **[NAS-CONTAINER-SETUP.md](./NAS-CONTAINER-SETUP.md)** ← NAS 실행 방법
+
+### 방법 2: NAS에서 직접 빌드 (고성능 NAS 전용)
+
+**NAS 성능이 충분한 경우에만 사용**
 
 1. **Replit에서 다운로드**
    ```
@@ -38,7 +78,8 @@
 
 4. **Container Manager에서 실행**
    - 프로젝트 → 새로 만들기
-   - 경로 선택 → 완료
+   - 경로 선택 → `docker-compose.yml` 사용
+   - 완료 (빌드 10-30분 소요)
 
 5. **데이터베이스 초기화**
    ```bash
@@ -50,7 +91,7 @@
    http://나스IP:5000
    ```
 
-**상세 가이드:** [`NAS-DEPLOYMENT.md`](./NAS-DEPLOYMENT.md) 참조
+**일반 배포 가이드:** [`NAS-DEPLOYMENT.md`](./NAS-DEPLOYMENT.md) 참조
 
 ## 💻 개발 환경
 
