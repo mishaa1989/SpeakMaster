@@ -54,15 +54,15 @@
 
 | 항목 | 값 |
 |------|-----|
-| **Build Command** | `npm install && npx vite build && npx esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs` |
+| **Build Command** | (아래 복사용 명령어 참조) |
 | **Start Command** | `node dist/index.cjs` |
 | **Port** | `5000` |
 
-> **중요:** `npm-shrinkwrap.json` 파일이 포함되어 있어 패키지 버전이 정확히 고정됩니다.
+> **중요:** `npx` 대신 `./node_modules/.bin/`을 사용하여 정확히 설치된 버전을 실행합니다.
 
 **복사용 Build Command:**
 ```bash
-npm install && npx vite build && npx esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs
+npm install && ./node_modules/.bin/vite build && ./node_modules/.bin/esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs
 ```
 
 ### 3-3. 환경 변수 설정
@@ -164,7 +164,7 @@ npm install && npx vite build && npx esbuild server/production.ts --platform=nod
 | 항목 | 설정값 |
 |------|--------|
 | **Node.js 버전** | 20.x 또는 22.x |
-| **Build Command** | `npm install && npx vite build && npx esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs` |
+| **Build Command** | `npm install && ./node_modules/.bin/vite build && ./node_modules/.bin/esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs` |
 | **Start Command** | `node dist/index.cjs` |
 | **Port** | `5000` |
 | **환경 변수** | DATABASE_URL, SESSION_SECRET, NODE_ENV=production, PORT=5000 |
