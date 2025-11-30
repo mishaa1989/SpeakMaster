@@ -3,8 +3,70 @@ import session from "express-session";
 import nodePath from "path";
 import fs from "fs";
 import { registerRoutes } from "./routes";
+import { pool } from "./db";
 
 const app = express();
+
+// Initialize database tables on startup
+async function initializeDatabase() {
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS admin_settings (
+        id SERIAL PRIMARY KEY,
+        password_hash TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+      
+      CREATE TABLE IF NOT EXISTS test_sets (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        instructor_email TEXT NOT NULL,
+        language TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+      
+      CREATE TABLE IF NOT EXISTS questions (
+        id SERIAL PRIMARY KEY,
+        test_set_id INTEGER NOT NULL REFERENCES test_sets(id) ON DELETE CASCADE,
+        filename TEXT NOT NULL,
+        duration TEXT NOT NULL,
+        "order" INTEGER NOT NULL,
+        audio_data TEXT NOT NULL
+      );
+      
+      CREATE TABLE IF NOT EXISTS student_recordings (
+        id SERIAL PRIMARY KEY,
+        test_set_id INTEGER NOT NULL REFERENCES test_sets(id) ON DELETE CASCADE,
+        question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+        recording_data TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+      
+      CREATE TABLE IF NOT EXISTS submissions (
+        id SERIAL PRIMARY KEY,
+        test_set_id INTEGER NOT NULL REFERENCES test_sets(id) ON DELETE CASCADE,
+        test_set_name TEXT NOT NULL,
+        student_name TEXT NOT NULL,
+        language TEXT NOT NULL,
+        submitted_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        recording_count INTEGER NOT NULL
+      );
+      
+      CREATE TABLE IF NOT EXISTS submission_recordings (
+        id SERIAL PRIMARY KEY,
+        submission_id INTEGER NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
+        recording_index INTEGER NOT NULL,
+        recording_data TEXT NOT NULL
+      );
+    `);
+    console.log("Database tables initialized successfully");
+  } catch (error) {
+    console.error("Failed to initialize database tables:", error);
+  } finally {
+    client.release();
+  }
+}
 
 declare module 'express-session' {
   interface SessionData {
@@ -93,6 +155,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize database tables before starting the server
+  await initializeDatabase();
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
