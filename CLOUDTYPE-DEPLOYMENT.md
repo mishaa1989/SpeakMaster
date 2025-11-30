@@ -54,15 +54,15 @@
 
 | 항목 | 값 |
 |------|-----|
-| **Build Command** | `npm install && vite build && npx esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs` |
+| **Build Command** | `npm install && npx vite build && npx esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs` |
 | **Start Command** | `node dist/index.cjs` |
 | **Port** | `5000` |
 
-> **중요:** 이 빌드 명령어는 Vite로 프론트엔드를 빌드하고, esbuild로 서버를 CJS 형식으로 번들링합니다.
+> **중요:** `npm-shrinkwrap.json` 파일이 포함되어 있어 패키지 버전이 정확히 고정됩니다.
 
 **복사용 Build Command:**
 ```bash
-npm install && vite build && npx esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs
+npm install && npx vite build && npx esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs
 ```
 
 ### 3-3. 환경 변수 설정
@@ -129,10 +129,15 @@ https://your-app-name.cloudtype.app
 
 → Build Command가 올바른지 확인:
 ```bash
-npm install && vite build && npx esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs
+npm install && npx vite build && npx esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs
 ```
 
 → **`server/production.ts`** 파일이 있는지 확인 (프로덕션 전용 서버 엔트리)
+
+### ❌ "Vite requires Node.js 20.19+ or 22.12+" 에러
+
+→ `npm-shrinkwrap.json` 파일이 GitHub에 푸시되었는지 확인
+→ 이 파일이 Vite 5.4.21 버전을 고정합니다
 
 ### ❌ "Database connection failed" 에러
 
@@ -158,11 +163,12 @@ npm install && vite build && npx esbuild server/production.ts --platform=node --
 
 | 항목 | 설정값 |
 |------|--------|
-| **Node.js 버전** | 20.x (권장) |
-| **Build Command** | `npm install && vite build && npx esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs` |
+| **Node.js 버전** | 20.x 또는 22.x |
+| **Build Command** | `npm install && npx vite build && npx esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs` |
 | **Start Command** | `node dist/index.cjs` |
 | **Port** | `5000` |
 | **환경 변수** | DATABASE_URL, SESSION_SECRET, NODE_ENV=production, PORT=5000 |
+| **필수 파일** | npm-shrinkwrap.json, .npmrc, server/production.ts |
 
 ---
 
