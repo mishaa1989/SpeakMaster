@@ -1,0 +1,54 @@
+Pod  ·  Stopping container node  ·  Killing
+ Normal  ·  13분 전
+ReplicaSet  ·  Deleted pod: speakmaster-node-5b7f47d448-7s4nk  ·  SuccessfulDelete
+ Normal  ·  14분 전
+Pod  ·  Successfully pulled image "sel/mishaa1989-node-express-speakmaster:mil69vsy37eb8b75" in 418ms (418ms including waiting). Image size: 523978828 bytes.  ·  Pulled
+ Normal  ·  14분 전
+Pod  ·  Startup probe failed: dial tcp speakmaster:5000: connect: connection refused  ·  Unhealthy
+ Warning  ·  14분 전
+Pod  ·  Started container node  ·  Started
+ Normal  ·  14분 전
+Pod  ·  Created container: node  ·  Created
+ Normal  ·  14분 전
+Pod  ·  Pulling image "sel/mishaa1989-node-express-speakmaster:mil69vsy37eb8b75"  ·  Pulling
+ Normal  ·  14분 전
+Pod  ·  Successfully pulled image "sel/mishaa1989-node-express-speakmaster:mil69vsy37eb8b75" in 373ms (373ms including waiting). Image size: 523978828 bytes.  ·  Pulled
+ Normal  ·  14분 전
+Pod  ·  Successfully assigned speakmaster-node-5b7f47d448-7s4nk to node  ·  Scheduled
+ Normal  ·  14분 전
+ReplicaSet  ·  Created pod: speakmaster-node-5b7f47d448-7s4nk  ·  SuccessfulCreate
+ Normal  ·  14분 전
+Deployment  ·  Scaled down replica set speakmaster-node-5b7f47d448 from 1 to 0  ·  ScalingReplicaSet
+ Normal  ·  22분 전
+ReplicaSet  ·  Deleted pod: speakmaster-node-5b7f47d448-rwb4v  ·  SuccessfulDelete
+ Normal  ·  22분 전
+Pod  ·  Successfully pulled image "sel/mishaa1989-node-express-speakmaster:mil69vsy37eb8b75" in 436ms (436ms including waiting). Image size: 523978828 bytes.  ·  Pulled
+ Normal  ·  50분 전
+Pod  ·  Successfully pulled image "sel/mishaa1989-node-express-speakmaster:mil69vsy37eb8b75" in 451ms (451ms including waiting). Image size: 523978828 bytes.  ·  Pulled
+ Normal  ·  53분 전
+Pod  ·  Successfully pulled image "sel/mishaa1989-node-express-speakmaster:mil69vsy37eb8b75" in 434ms (434ms including waiting). Image size: 523978828 bytes.  ·  Pulled
+ Normal  ·  54분 전
+Pod  ·  Successfully pulled image "sel/mishaa1989-node-express-speakmaster:mil69vsy37eb8b75" in 423ms (423ms including waiting). Image size: 523978828 bytes.  ·  Pulled
+ Normal  ·  55분 전
+Pod  ·  Successfully pulled image "sel/mishaa1989-node-express-speakmaster:mil69vsy37eb8b75" in 446ms (446ms including waiting). Image size: 523978828 bytes.  ·  Pulled
+ Normal  ·  56분 전
+Pod  ·  Back-off restarting failed container node in pod speakmaster-node-5b7f47d448-rwb4v_stage(b106c541-32bf-47a2-8081-552b040af7ca)  ·  BackOff
+ Warning  ·  56분 전
+Pod  ·  Successfully pulled image "sel/mishaa1989-node-express-speakmaster:mil69vsy37eb8b75" in 375ms (376ms including waiting). Image size: 523978828 bytes.  ·  Pulled
+ Normal  ·  56분 전
+Pod  ·  Startup probe failed: dial tcp speakmaster:5000: connect: connection refused  ·  Unhealthy
+ Warning  ·  56분 전
+Pod  ·  Successfully pulled image "sel/mishaa1989-node-express-speakmaster:mil69vsy37eb8b75" in 11.246s (11.247s including waiting). Image size: 523978828 bytes.  ·  Pulled
+ Normal  ·  56분 전
+Pod  ·  Created container: node  ·  Created
+ Normal  ·  56분 전
+Pod  ·  Started container node  ·  Started
+ Normal  ·  56분 전
+Pod  ·  Pulling image "sel/mishaa1989-node-express-speakmaster:mil69vsy37eb8b75"  ·  Pulling
+ Normal  ·  56분 전
+Pod  ·  Successfully assigned speakmaster-node-5b7f47d448-rwb4v to node  ·  Scheduled
+ Normal  ·  56분 전
+Deployment  ·  Scaled up replica set speakmaster-node-5b7f47d448 from 0 to 1  ·  ScalingReplicaSet
+ Normal  ·  56분 전
+ReplicaSet  ·  Created pod: speakmaster-node-5b7f47d448-rwb4v  ·  SuccessfulCreate
+ Normal  ·  56분 전
