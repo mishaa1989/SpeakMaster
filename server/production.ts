@@ -106,6 +106,9 @@ function serveStatic(expressApp: express.Express) {
   });
 }
 
+// Trust proxy for Cloudtype/reverse proxy environments
+app.set('trust proxy', 1);
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'default-secret-key-change-in-production',
   resave: false,
@@ -113,6 +116,7 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
+    sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
