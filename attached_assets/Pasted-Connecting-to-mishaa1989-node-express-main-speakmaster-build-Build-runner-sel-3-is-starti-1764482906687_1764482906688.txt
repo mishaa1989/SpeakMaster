@@ -1,0 +1,173 @@
+Connecting to "@mishaa1989/node-express:main/speakmaster/build" ...
+🏂 Build runner(sel-3) is starting...
+  ├ Build type is dockerfile
+  └ Build env is {"NODE_ENV":"p*********","DATABASE_URL":"p*****************************************************","SESSION_SECRET":"2***************************************************************"}
+😐 Fetching repository.
+  ├ Git URL is https://github.com/mishaa1989/SpeakMaster.git
+  └ Git ref is refs/heads/main
+cloning from "https://github.com/mishaa1989/SpeakMaster.git"
+🙂 Fetch result.
+  ├ Git URL is https://github.com/mishaa1989/SpeakMaster.git
+  ├ revision is b0bd68281ae9df0736909712801a40538fc7848b
+  ├ branch is main
+  └ "Add system to automatically create database tables on startup  Integrates database table creation into the application startup process in server/production.ts, ensuring tables exist before the server initializes.  Replit-Commit-Author: Agent Replit-Commit-Session-Id: 2c4c36c9-8e0c-4a3a-b7c0-3ae4b5e42476 Replit-Commit-Checkpoint-Type: full_checkpoint Replit-Commit-Event-Id: 0950a808-e0eb-45e6-8352-d7b790b8cfae Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/53776993-a0d0-43f7-9b35-540651e0218d/2c4c36c9-8e0c-4a3a-b7c0-3ae4b5e42476/V6ab2gZ  "
+🟢 Fetch success. Rev is b0bd68281ae9df0736909712801a40538fc7848b
+🟡 Building image...
+#1 [internal] load build definition from dockerfile.build-a24178e0a2555923c...
+#1 transferring dockerfile: 1.17kB done
+#1 DONE 0.3s
+
+#2 [internal] load .dockerignore
+#2 transferring context: 700B done
+#2 DONE 0.5s
+
+#3 [internal] load metadata for docker.io/cloudtype/node:24
+#3 DONE 1.2s
+
+#4 [stage-1 1/4] FROM docker.io/cloudtype/node:24@sha256:854722e3940519e385...
+#4 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 5.89MB 0.1s done
+#6 DONE 0.3s
+
+#5 [stage-1 2/4] WORKDIR /app
+#5 CACHED
+
+#7 [build 3/7] COPY package.json yarn.lock* package-lock.json* pnpm-lock.ya...
+#7 CACHED
+
+#8 [build 4/7] RUN echo "use npmjs.org registry"
+#8 CACHED
+
+#9 [build 5/7] RUN if [ -f yarn.lock ]; then yarn --frozen-lockfile; elif [...
+#9 CACHED
+
+#10 [build 6/7] COPY ./ ./
+#10 DONE 0.5s
+
+#11 [build 7/7] RUN NPM_CONFIG_PRODUCTION=false npm install && npx --no-inst...
+#11 2.720 npm warn config production Use `--omit=dev` instead.
+#11 69.73 
+#11 69.73 added 142 packages, removed 98 packages, changed 167 packages, and audited 718 packages in 1m
+#11 69.73 
+#11 69.73 81 packages are looking for funding
+#11 69.73   run `npm fund` for details
+#11 69.76 
+#11 69.76 9 vulnerabilities (3 low, 5 moderate, 1 high)
+#11 69.76 
+#11 69.76 To address issues that do not require attention, run:
+#11 69.76   npm audit fix
+#11 69.76 
+#11 69.76 To address all issues (including breaking changes), run:
+#11 69.76   npm audit fix --force
+#11 69.76 
+#11 69.76 Run `npm audit` for details.
+#11 69.76 npm notice
+#11 69.76 npm notice New minor version of npm available! 11.4.2 -> 11.6.4
+#11 69.76 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.4
+#11 69.76 npm notice To update run: npm install -g npm@11.6.4
+#11 69.76 npm notice
+#11 70.61 vite v5.4.21 building for production...
+#11 70.67 transforming...
+#11 71.83 
+#11 71.83 A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+#11 74.40 ✓ 1728 modules transformed.
+#11 74.66 rendering chunks...
+#11 74.67 computing gzip size...
+#11 74.69 ../dist/public/index.html                                                           0.77 kB │ gzip:   0.42 kB
+#11 74.69 ../dist/public/assets/Test_completion_success_illustration_2a9bc3e7-yAXCL-M1.png  362.14 kB
+#11 74.69 ../dist/public/assets/Empty_state_educational_illustration_b3f91838-DrvXZ_BZ.png  682.38 kB
+#11 74.69 ../dist/public/assets/index-CL2MHAv0.css                                           70.24 kB │ gzip:  11.35 kB
+#11 74.69 ../dist/public/assets/index-B10Bzcmb.js                                           357.20 kB │ gzip: 114.73 kB
+#11 74.69 ✓ built in 4.06s
+#11 75.14 
+#11 75.14   dist/index.cjs  29.6kb
+#11 75.14 
+#11 75.14 ⚡ Done in 7ms
+#11 75.69 No config path provided, using default 'drizzle.config.ts'
+#11 75.69 Reading config file '/app/drizzle.config.ts'
+#11 76.35 Using 'pg' driver for database querying
+#11 76.60 [⣷] Pulling schema from database...
+#11 76.63 Error: getaddrinfo ENOTFOUND postgresql
+#11 76.63     at /app/node_modules/pg-pool/index.js:45:11
+#11 76.63     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+#11 76.63     at async Object.query (/app/node_modules/drizzle-kit/bin.cjs:80622:26)
+#11 76.63     at async fromDatabase2 (/app/node_modules/drizzle-kit/bin.cjs:19276:25) {
+#11 76.63   errno: -3008,
+#11 76.63   code: 'ENOTFOUND',
+#11 76.63   syscall: 'getaddrinfo',
+#11 76.63   hostname: 'postgresql'
+#11 76.63 }
+#11 DONE 79.1s
+
+#5 [stage-1 2/4] WORKDIR /app
+#5 CACHED
+
+#12 [stage-1 3/4] COPY --from=build --chown=node:node /app/ ./
+#12 DONE 8.5s
+
+#13 [stage-1 4/4] RUN chown -f node:node /app && rm -rf .git*
+#13 DONE 0.6s
+
+#14 exporting to image
+#14 exporting layers
+#14 exporting layers 4.3s done
+#14 writing image sha256:0017b5291a945b430c499e4ae73373d3f0172cd1adc95471ffbf139daff5d125
+#14 writing image sha256:0017b5291a945b430c499e4ae73373d3f0172cd1adc95471ffbf139daff5d125 0.0s done
+#14 naming to docker.io/library/build-a24178e0a2555923cb755286b6b207f2 done
+#14 DONE 5.0s
+🟢 Image build complete.
+The push refers to repository [asia-northeast3-docker.pkg.dev/cloudtype/sel/mishaa1989-node-express-speakmaster]
+2268aafd889b: Preparing
+14fb63abf4bd: Preparing
+3b4b7c7055de: Preparing
+50392f371b45: Preparing
+50392f371b45: Preparing
+ce5123d6b098: Preparing
+837f3bacd630: Preparing
+3ce0b54b506d: Preparing
+9da9ad2450b8: Preparing
+9b4b0d5d46df: Preparing
+f9e4cd33a873: Preparing
+36522c4a5769: Preparing
+3ce0b54b506d: Waiting
+9da9ad2450b8: Waiting
+9b4b0d5d46df: Waiting
+36c79b297397: Preparing
+f9e4cd33a873: Waiting
+5f124aa3d33e: Preparing
+f9093a7aaa16: Preparing
+1c49688bd8eb: Preparing
+f5b8fb1def00: Preparing
+8f003894a7ef: Preparing
+f5b8fb1def00: Waiting
+8f003894a7ef: Waiting
+5f124aa3d33e: Waiting
+837f3bacd630: Waiting
+36522c4a5769: Waiting
+36c79b297397: Waiting
+f9093a7aaa16: Waiting
+1c49688bd8eb: Waiting
+50392f371b45: Layer already exists
+ce5123d6b098: Layer already exists
+3b4b7c7055de: Layer already exists
+3ce0b54b506d: Layer already exists
+9da9ad2450b8: Layer already exists
+837f3bacd630: Layer already exists
+36522c4a5769: Layer already exists
+f9e4cd33a873: Layer already exists
+9b4b0d5d46df: Layer already exists
+5f124aa3d33e: Layer already exists
+36c79b297397: Layer already exists
+f9093a7aaa16: Layer already exists
+1c49688bd8eb: Layer already exists
+8f003894a7ef: Layer already exists
+f5b8fb1def00: Layer already exists
+2268aafd889b: Pushed
+14fb63abf4bd: Pushed
+milbgw1v364d6bd3: digest: sha256:fc608132e4727c218e6e3ced07954a34cc8f8fc515bf797adfecc41755009c78 size: 4093
+🟢 Push success.
+  ├ asia-northeast3-docker.pkg.dev/cloudtype/sel/mishaa1989-node-express-speakmaster:milbgw1v364d6bd3
+  └ 1 image(s)
+✅ Build job(milbgw1v364d6bd3) complete.
