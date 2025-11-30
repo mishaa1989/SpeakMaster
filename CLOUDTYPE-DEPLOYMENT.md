@@ -58,11 +58,12 @@
 | **Start Command** | `node dist/index.cjs` |
 | **Port** | `5000` |
 
-> **중요:** `npx` 대신 `./node_modules/.bin/`을 사용하여 정확히 설치된 버전을 실행합니다.
+> **핵심:** Cloudtype은 production 모드로 빌드하므로 `NPM_CONFIG_PRODUCTION=false`로 devDependencies도 설치해야 합니다.
+> `npx --no-install`은 새 패키지를 다운로드하지 않고 설치된 버전만 사용합니다.
 
 **복사용 Build Command:**
 ```bash
-npm install && ./node_modules/.bin/vite build && ./node_modules/.bin/esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs
+NPM_CONFIG_PRODUCTION=false npm install && npx --no-install vite build && npx --no-install esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs
 ```
 
 ### 3-3. 환경 변수 설정
@@ -164,7 +165,7 @@ npm install && npx vite build && npx esbuild server/production.ts --platform=nod
 | 항목 | 설정값 |
 |------|--------|
 | **Node.js 버전** | 20.x 또는 22.x |
-| **Build Command** | `npm install && ./node_modules/.bin/vite build && ./node_modules/.bin/esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs` |
+| **Build Command** | `NPM_CONFIG_PRODUCTION=false npm install && npx --no-install vite build && npx --no-install esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs` |
 | **Start Command** | `node dist/index.cjs` |
 | **Port** | `5000` |
 | **환경 변수** | DATABASE_URL, SESSION_SECRET, NODE_ENV=production, PORT=5000 |
