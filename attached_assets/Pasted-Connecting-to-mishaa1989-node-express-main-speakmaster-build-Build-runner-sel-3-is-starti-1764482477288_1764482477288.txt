@@ -1,0 +1,119 @@
+Connecting to "@mishaa1989/node-express:main/speakmaster/build" ...
+🏂 Build runner(sel-3) is starting...
+  ├ Build type is dockerfile
+  └ Build env is {"NODE_ENV":"p*********","DATABASE_URL":"p*****************************************************","SESSION_SECRET":"2***************************************************************"}
+😐 Fetching repository.
+  ├ Git URL is https://github.com/mishaa1989/SpeakMaster.git
+  └ Git ref is refs/heads/main
+cloning from "https://github.com/mishaa1989/SpeakMaster.git"
+🙂 Fetch result.
+  ├ Git URL is https://github.com/mishaa1989/SpeakMaster.git
+  ├ revision is 074bfc858012868472134d753445659aa0583390
+  ├ branch is main
+  └ "Saved progress at the end of the loop  Replit-Commit-Author: Agent Replit-Commit-Session-Id: 2c4c36c9-8e0c-4a3a-b7c0-3ae4b5e42476 Replit-Commit-Checkpoint-Type: full_checkpoint Replit-Commit-Event-Id: f481a4b2-d08c-4945-919d-2b48a4433826 Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/53776993-a0d0-43f7-9b35-540651e0218d/2c4c36c9-8e0c-4a3a-b7c0-3ae4b5e42476/V6ab2gZ  "
+🟢 Fetch success. Rev is 074bfc858012868472134d753445659aa0583390
+🟡 Building image...
+#1 [internal] load build definition from dockerfile.build-fc34894a9b3f0c655...
+#1 DONE 0.0s
+
+#2 [internal] load .dockerignore
+#2 transferring context: 700B done
+#2 DONE 0.4s
+
+#1 [internal] load build definition from dockerfile.build-fc34894a9b3f0c655...
+#1 transferring dockerfile: 1.17kB done
+#1 DONE 0.7s
+
+#3 [internal] load metadata for docker.io/cloudtype/node:24
+#3 DONE 1.3s
+
+#4 [build 1/7] FROM docker.io/cloudtype/node:24@sha256:854722e3940519e3851b...
+#4 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 5.06MB 0.2s done
+#6 DONE 0.6s
+
+#8 [build 4/7] RUN echo "use npmjs.org registry"
+#8 CACHED
+
+#5 [build 2/7] WORKDIR /app
+#5 CACHED
+
+#12 [stage-1 3/4] COPY --from=build --chown=node:node /app/ ./
+#12 CACHED
+
+#7 [build 3/7] COPY package.json yarn.lock* package-lock.json* pnpm-lock.ya...
+#7 CACHED
+
+#9 [build 5/7] RUN if [ -f yarn.lock ]; then yarn --frozen-lockfile; elif [...
+#9 CACHED
+
+#11 [build 7/7] RUN NPM_CONFIG_PRODUCTION=false npm install && npx --no-inst...
+#11 CACHED
+
+#10 [build 6/7] COPY ./ ./
+#10 CACHED
+
+#13 [stage-1 4/4] RUN chown -f node:node /app && rm -rf .git*
+#13 CACHED
+
+#14 exporting to image
+#14 exporting layers done
+#14 writing image sha256:c410e63be7196dfae12b2be4cdc3344b6209cee16fbf900847069107f666b1af done
+#14 naming to docker.io/library/build-fc34894a9b3f0c655291097fa4b41db7 done
+#14 DONE 1.4s
+🟢 Image build complete.
+The push refers to repository [asia-northeast3-docker.pkg.dev/cloudtype/sel/mishaa1989-node-express-speakmaster]
+d9d2afaff773: Preparing
+35717efcda82: Preparing
+3b4b7c7055de: Preparing
+50392f371b45: Preparing
+50392f371b45: Preparing
+ce5123d6b098: Preparing
+837f3bacd630: Preparing
+3ce0b54b506d: Preparing
+9da9ad2450b8: Preparing
+9b4b0d5d46df: Preparing
+f9e4cd33a873: Preparing
+36522c4a5769: Preparing
+36c79b297397: Preparing
+5f124aa3d33e: Preparing
+f9093a7aaa16: Preparing
+1c49688bd8eb: Preparing
+f5b8fb1def00: Preparing
+8f003894a7ef: Preparing
+f9e4cd33a873: Waiting
+36522c4a5769: Waiting
+36c79b297397: Waiting
+5f124aa3d33e: Waiting
+f9093a7aaa16: Waiting
+1c49688bd8eb: Waiting
+f5b8fb1def00: Waiting
+8f003894a7ef: Waiting
+3ce0b54b506d: Waiting
+9da9ad2450b8: Waiting
+9b4b0d5d46df: Waiting
+837f3bacd630: Waiting
+50392f371b45: Layer already exists
+d9d2afaff773: Layer already exists
+35717efcda82: Layer already exists
+ce5123d6b098: Layer already exists
+3b4b7c7055de: Layer already exists
+9b4b0d5d46df: Layer already exists
+9da9ad2450b8: Layer already exists
+837f3bacd630: Layer already exists
+3ce0b54b506d: Layer already exists
+f9e4cd33a873: Layer already exists
+f9093a7aaa16: Layer already exists
+1c49688bd8eb: Layer already exists
+36c79b297397: Layer already exists
+36522c4a5769: Layer already exists
+5f124aa3d33e: Layer already exists
+f5b8fb1def00: Layer already exists
+8f003894a7ef: Layer already exists
+milbaa1w0f9b6cb9: digest: sha256:0b3bf5a1820aa3595cd75ade300fc8a7dec8b3689883bc650431920fae029f5d size: 4093
+🟢 Push success.
+  ├ asia-northeast3-docker.pkg.dev/cloudtype/sel/mishaa1989-node-express-speakmaster:milbaa1w0f9b6cb9
+  └ 1 image(s)
+✅ Build job(milbaa1w0f9b6cb9) complete.
