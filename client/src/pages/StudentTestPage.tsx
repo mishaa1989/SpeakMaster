@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import TestHeader from "@/components/student/TestHeader";
 import QuestionCard from "@/components/student/QuestionCard";
@@ -16,12 +16,21 @@ const LANGUAGES = ["영어", "중국어", "러시아어", "독일어", "프랑�
 
 export default function StudentTestPage() {
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
+  
+  // Parse URL parameters for direct test access
+  const urlParams = new URLSearchParams(searchString);
+  const urlTestId = urlParams.get('testId');
+  const urlLanguage = urlParams.get('language');
+  const isDirectAccess = !!urlTestId && !!urlLanguage;
+  
   const [studentName, setStudentName] = useState("");
-  const [selectedLanguage, setSelectedLanguage] = useState("");
-  const [selectedTestSetId, setSelectedTestSetId] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState(urlLanguage || "");
+  const [selectedTestSetId, setSelectedTestSetId] = useState<string | null>(isDirectAccess ? urlTestId : null);
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [recordings, setRecordings] = useState<Blob[]>([]);
   const [isComplete, setIsComplete] = useState(false);
+  const [nameConfirmed, setNameConfirmed] = useState(false);
   const { toast } = useToast();
 
   // Use public API for student access (no auth required)
@@ -102,7 +111,74 @@ export default function StudentTestPage() {
     return <CompletionScreen onBackToHome={() => setLocation('/')} />;
   }
 
-  // Student info input screen
+  // Direct access: just need name confirmation
+  if (isDirectAccess && !nameConfirmed) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md w-full p-8">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-semibold text-foreground mb-2">
+              학생 정보 입력
+            </h1>
+            <p className="text-muted-foreground">
+              응시자 정보를 입력해주세요
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="student-name">이름</Label>
+              <Input
+                id="student-name"
+                placeholder="홍길동"
+                value={studentName}
+                onChange={(e) => setStudentName(e.target.value)}
+                data-testid="input-student-name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>응시 언어</Label>
+              <div className="px-3 py-2 border rounded-md bg-muted text-muted-foreground">
+                {urlLanguage}
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setLocation('/')}
+                data-testid="button-cancel"
+              >
+                취소
+              </Button>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  if (!studentName.trim()) {
+                    toast({
+                      title: "오류",
+                      description: "이름을 입력해주세요.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  setNameConfirmed(true);
+                }}
+                disabled={!studentName.trim()}
+                data-testid="button-continue"
+              >
+                계속하기
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Normal flow: Student info input screen
   if (!studentName || !selectedLanguage) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">

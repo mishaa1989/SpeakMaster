@@ -1,9 +1,10 @@
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, FileAudio, ChevronDown } from "lucide-react";
+import { Calendar, FileAudio, ChevronDown, Link2 } from "lucide-react";
 import QuestionList from "./QuestionList";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Question {
   id: string;
@@ -16,6 +17,7 @@ interface TestSetCardProps {
   id: string;
   name: string;
   createdAt: string;
+  language: string;
   questions: Question[];
   onDeleteQuestion: (questionId: string) => void;
   onPlayQuestion: (url: string) => void;
@@ -26,12 +28,32 @@ export default function TestSetCard({
   id,
   name,
   createdAt,
+  language,
   questions,
   onDeleteQuestion,
   onPlayQuestion,
   onDeleteSet,
 }: TestSetCardProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { toast } = useToast();
+
+  const copyTestLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const baseUrl = window.location.origin;
+    const testLink = `${baseUrl}/student?testId=${id}&language=${encodeURIComponent(language)}`;
+    navigator.clipboard.writeText(testLink).then(() => {
+      toast({
+        title: "링크 복사 완료",
+        description: "학생에게 공유할 링크가 복사되었습니다.",
+      });
+    }).catch(() => {
+      toast({
+        title: "복사 실패",
+        description: "링크 복사에 실패했습니다.",
+        variant: "destructive",
+      });
+    });
+  };
 
   return (
     <Card data-testid={`card-testset-${id}`}>
@@ -54,6 +76,15 @@ export default function TestSetCard({
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={copyTestLink}
+            title="학생용 링크 복사"
+            data-testid={`button-copy-link-${id}`}
+          >
+            <Link2 className="w-4 h-4" />
+          </Button>
           <Badge variant={questions.length === 15 ? "default" : "secondary"}>
             {questions.length === 15 ? "완료" : "진행중"}
           </Badge>
