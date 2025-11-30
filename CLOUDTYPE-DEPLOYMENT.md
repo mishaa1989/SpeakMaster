@@ -63,8 +63,10 @@
 
 **복사용 Build Command:**
 ```bash
-NPM_CONFIG_PRODUCTION=false npm install && npx --no-install vite build && npx --no-install esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs
+NPM_CONFIG_PRODUCTION=false npm install && npx --no-install vite build && npx --no-install esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs && npx --no-install drizzle-kit push
 ```
+
+> **참고:** 빌드 마지막에 `drizzle-kit push`가 자동으로 데이터베이스 테이블을 생성합니다.
 
 ### 3-3. 환경 변수 설정
 
@@ -165,7 +167,7 @@ npm install && npx vite build && npx esbuild server/production.ts --platform=nod
 | 항목 | 설정값 |
 |------|--------|
 | **Node.js 버전** | 20.x 또는 22.x |
-| **Build Command** | `NPM_CONFIG_PRODUCTION=false npm install && npx --no-install vite build && npx --no-install esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs` |
+| **Build Command** | `NPM_CONFIG_PRODUCTION=false npm install && npx --no-install vite build && npx --no-install esbuild server/production.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.cjs && npx --no-install drizzle-kit push` |
 | **Start Command** | `node dist/index.cjs` |
 | **Port** | `5000` |
 | **환경 변수** | DATABASE_URL, SESSION_SECRET, NODE_ENV=production, PORT=5000 |
