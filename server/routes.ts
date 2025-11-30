@@ -29,11 +29,28 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get all test sets - Admin only
+  // Get all test sets - Admin only (full details)
   app.get('/api/test-sets', requireAuth, async (req, res) => {
     try {
       const testSets = await storage.getAllTestSets();
       res.json(testSets);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch test sets' });
+    }
+  });
+
+  // Get all test sets for students (public, limited info)
+  app.get('/api/public/test-sets', async (req, res) => {
+    try {
+      const testSets = await storage.getAllTestSets();
+      // Return only necessary info for students (no instructor email)
+      const publicTestSets = testSets.map(ts => ({
+        id: ts.id,
+        name: ts.name,
+        language: ts.language,
+        questionCount: ts.questions.length,
+      }));
+      res.json(publicTestSets);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch test sets' });
     }

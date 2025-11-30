@@ -24,8 +24,9 @@ export default function StudentTestPage() {
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
 
-  const { data: testSets = [], isLoading: loadingTestSets } = useQuery<TestSet[]>({
-    queryKey: ['/api/test-sets'],
+  // Use public API for student access (no auth required)
+  const { data: testSets = [], isLoading: loadingTestSets } = useQuery<{id: string; name: string; language: string; questionCount: number}[]>({
+    queryKey: ['/api/public/test-sets'],
   });
 
   const { data: selectedTestSet } = useQuery<TestSet>({
@@ -225,7 +226,7 @@ export default function StudentTestPage() {
                     key={set.id}
                     className="p-6 hover-elevate cursor-pointer"
                     onClick={() => {
-                      if (set.questions.length > 0) {
+                      if (set.questionCount > 0) {
                         setSelectedTestSetId(set.id);
                       } else {
                         toast({
@@ -243,10 +244,10 @@ export default function StudentTestPage() {
                           {set.name}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          질문 수: {set.questions.length}개
+                          질문 수: {set.questionCount}개
                         </p>
                       </div>
-                      {set.questions.length > 0 && (
+                      {set.questionCount > 0 && (
                         <Button data-testid={`button-select-${set.id}`}>
                           선택하기
                         </Button>
