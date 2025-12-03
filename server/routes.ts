@@ -11,7 +11,15 @@ const storage = new DbStorage();
 const upload = multer({ 
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'audio/mpeg' || file.mimetype === 'audio/mp3' || file.mimetype === 'audio/webm') {
+    const allowedTypes = [
+      'audio/mpeg', 
+      'audio/mp3', 
+      'audio/webm',
+      'audio/wav',
+      'audio/x-wav',
+      'audio/wave'
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
       cb(null, false);
@@ -308,8 +316,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Convert Buffer to Stream for archiver
         const { Readable } = await import('stream');
         const stream = Readable.from(recording);
+        // Use .wav extension for merged recordings, .webm for legacy
+        const extension = submission.recordingCount === 1 ? 'wav' : 'webm';
         archive.append(stream, { 
-          name: `question_${i + 1}.webm`
+          name: submission.recordingCount === 1 ? `recording.${extension}` : `question_${i + 1}.${extension}`
         });
       } else {
         console.log(`  Recording ${i + 1}: NOT FOUND`);
@@ -321,14 +331,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     archive.finalize();
   });
 
-  // Submit student recordings
-  app.post('/api/submit-test', upload.array('recordings', 50), async (req, res) => {
+  // Submit student recordings (single merged file)
+  app.post('/api/submit-test', upload.single('recording'), async (req, res) => {
     try {
       console.log('Submit test request received');
       console.log('Body:', req.body);
-      console.log('Files:', req.files);
+      console.log('File:', req.file);
       
-      const files = req.files as Express.Multer.File[];
+      const file = req.file;
       const { testSetId, studentName, language } = req.body;
 
       if (!testSetId || !studentName || !language) {
@@ -336,26 +346,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
-      if (!files || files.length === 0) {
-        console.error('No files received');
-        return res.status(400).json({ error: 'No recordings submitted' });
+      if (!file) {
+        console.error('No file received');
+        return res.status(400).json({ error: 'No recording submitted' });
       }
       
-      console.log(`Received ${files.length} recording files from ${studentName} for language: ${language}`);
+      console.log(`Received merged recording from ${studentName} for language: ${language}, size: ${file.size} bytes`);
 
       const testSet = await storage.getTestSet(testSetId);
       if (!testSet) {
         return res.status(404).json({ error: 'Test set not found' });
       }
 
-      // Save submission
-      const recordings = files.map(file => file.buffer);
+      // Save submission with single merged recording
       const submission = await storage.saveSubmission(
         testSetId,
         testSet.name,
         studentName,
         language,
-        recordings
+        [file.buffer]
       );
 
       console.log(`Submission saved with ID: ${submission.id}`);

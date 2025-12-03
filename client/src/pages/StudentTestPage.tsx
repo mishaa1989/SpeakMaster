@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Key, Loader2 } from "lucide-react";
+import { mergeAudioBlobs } from "@/lib/audioUtils";
 
 export default function StudentTestPage() {
   const [, setLocation] = useLocation();
@@ -79,15 +80,15 @@ export default function StudentTestPage() {
     mutationFn: async (data: { testSetId: string; recordings: Blob[]; studentName: string; language: string }) => {
       console.log('Submitting test with', data.recordings.length, 'recordings');
       
+      console.log('Merging all recordings into one file...');
+      const mergedAudio = await mergeAudioBlobs(data.recordings);
+      console.log('Merged audio:', mergedAudio.size, 'bytes, type:', mergedAudio.type);
+      
       const formData = new FormData();
       formData.append('testSetId', data.testSetId);
       formData.append('studentName', data.studentName);
       formData.append('language', data.language);
-      
-      data.recordings.forEach((blob, index) => {
-        console.log(`Recording ${index + 1}:`, blob.size, 'bytes, type:', blob.type);
-        formData.append('recordings', blob, `recording_${index + 1}.webm`);
-      });
+      formData.append('recording', mergedAudio, 'recording.wav');
 
       const response = await fetch('/api/submit-test', {
         method: 'POST',
