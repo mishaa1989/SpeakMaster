@@ -22,6 +22,7 @@ export interface IStorage {
   // Test Set operations
   createTestSet(name: string, instructorEmail: string, language: string, questions: Omit<Question, 'id'>[]): Promise<TestSet>;
   updateTestSetEmail(id: string, instructorEmail: string): Promise<boolean>;
+  regenerateAccessCode(id: string): Promise<string | undefined>;
   getTestSet(id: string): Promise<TestSet | undefined>;
   getTestSetByAccessCode(accessCode: string): Promise<TestSet | undefined>;
   getAllTestSets(): Promise<TestSet[]>;
@@ -100,6 +101,16 @@ export class MemStorage implements IStorage {
     testSet.instructorEmail = instructorEmail;
     this.testSets.set(id, testSet);
     return true;
+  }
+
+  async regenerateAccessCode(id: string): Promise<string | undefined> {
+    const testSet = this.testSets.get(id);
+    if (!testSet) return undefined;
+    
+    const newCode = generateAccessCode();
+    testSet.accessCode = newCode;
+    this.testSets.set(id, testSet);
+    return newCode;
   }
 
   async getTestSet(id: string): Promise<TestSet | undefined> {
@@ -271,6 +282,14 @@ export class DbStorage implements IStorage {
       .set({ instructorEmail })
       .where(eq(testSets.id, parseInt(id)));
     return true;
+  }
+
+  async regenerateAccessCode(id: string): Promise<string | undefined> {
+    const newCode = generateAccessCode();
+    await db.update(testSets)
+      .set({ accessCode: newCode })
+      .where(eq(testSets.id, parseInt(id)));
+    return newCode;
   }
 
   async getTestSet(id: string): Promise<TestSet | undefined> {

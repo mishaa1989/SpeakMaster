@@ -180,6 +180,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Regenerate access code for test set - Admin only
+  app.post('/api/test-sets/:id/regenerate-code', requireAuth, async (req, res) => {
+    try {
+      const newCode = await storage.regenerateAccessCode(req.params.id);
+      if (!newCode) {
+        return res.status(404).json({ error: 'Test set not found' });
+      }
+      res.json({ accessCode: newCode });
+    } catch (error) {
+      console.error('Error regenerating access code:', error);
+      res.status(500).json({ error: 'Failed to regenerate access code' });
+    }
+  });
+
   // Delete test set - Admin only
   app.delete('/api/test-sets/:id', requireAuth, async (req, res) => {
     try {
