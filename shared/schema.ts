@@ -14,6 +14,7 @@ export const testSets = pgTable("test_sets", {
   name: text("name").notNull(),
   instructorEmail: text("instructor_email").notNull(),
   language: text("language").notNull(),
+  accessCode: text("access_code").notNull().default('000000'),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -66,6 +67,7 @@ export interface TestSet {
   createdAt: string;
   instructorEmail: string;
   language: string;
+  accessCode: string;
   questions: Question[];
 }
 

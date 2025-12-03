@@ -3,6 +3,16 @@ import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 
+// Generate 6-character random access code
+function generateAccessCode(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
 export interface IStorage {
   // Admin settings operations
   isAdminPasswordSet(): Promise<boolean>;
@@ -73,6 +83,7 @@ export class MemStorage implements IStorage {
       name,
       instructorEmail,
       language,
+      accessCode: generateAccessCode(),
       createdAt: new Date().toISOString().split('T')[0],
       questions: questionsWithIds,
     };
@@ -203,11 +214,14 @@ export class DbStorage implements IStorage {
   }
 
   async createTestSet(name: string, instructorEmail: string, language: string, questionsData: Omit<Question, 'id'>[]): Promise<TestSet> {
+    const accessCode = generateAccessCode();
+    
     // Create test set
     const [testSetRow] = await db.insert(testSets).values({
       name,
       instructorEmail,
       language,
+      accessCode,
     }).returning();
 
     // Create questions with audio data
@@ -230,6 +244,7 @@ export class DbStorage implements IStorage {
       name: testSetRow.name,
       instructorEmail: testSetRow.instructorEmail,
       language: testSetRow.language,
+      accessCode: testSetRow.accessCode,
       createdAt: testSetRow.createdAt.toISOString().split('T')[0],
       questions: questionRows.map(q => ({
         id: q.id.toString(),
@@ -265,6 +280,7 @@ export class DbStorage implements IStorage {
       name: testSetRow.name,
       instructorEmail: testSetRow.instructorEmail,
       language: testSetRow.language,
+      accessCode: testSetRow.accessCode,
       createdAt: testSetRow.createdAt.toISOString().split('T')[0],
       questions: questionRows.map(q => ({
         id: q.id.toString(),
@@ -291,6 +307,7 @@ export class DbStorage implements IStorage {
           name: testSetRow.name,
           instructorEmail: testSetRow.instructorEmail,
           language: testSetRow.language,
+          accessCode: testSetRow.accessCode,
           createdAt: testSetRow.createdAt.toISOString().split('T')[0],
           questions: questionRows.map(q => ({
             id: q.id.toString(),
