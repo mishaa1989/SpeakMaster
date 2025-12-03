@@ -13,7 +13,25 @@ The system enables asynchronous language assessment by capturing student recordi
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes (November 15, 2025)
+## Recent Changes (December 3, 2025)
+
+### Access Code System for Student Authentication
+- Added 6-digit alphanumeric access codes to test sets for student authentication
+- Access codes auto-generated on test set creation (format: ABC123)
+- Admin UI displays access codes on TestSetCard with copy-to-clipboard functionality
+- Student access flow: Enter access code → Enter name → Start test
+- Direct link access (via URL parameters) bypasses access code requirement
+- Public API endpoint for access code verification: `POST /api/public/verify-access-code`
+
+### Security Improvements
+- `/api/test-sets/:id` now requires admin authentication
+- Created public endpoint `/api/public/test-sets/:id` for students (excludes accessCode and instructorEmail)
+- Sequential test set IDs no longer expose sensitive data
+
+### Database Schema Updates
+- Added `access_code` column to `test_sets` table (6-character random code)
+
+## Previous Changes (November 15, 2025)
 
 ### Initial Setup Flow for Admin Password
 - Replaced environment variable requirement with database-stored password

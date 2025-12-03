@@ -87,14 +87,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get a single test set
-  app.get('/api/test-sets/:id', async (req, res) => {
+  // Get a single test set - Admin only (includes sensitive data)
+  app.get('/api/test-sets/:id', requireAuth, async (req, res) => {
     try {
       const testSet = await storage.getTestSet(req.params.id);
       if (!testSet) {
         return res.status(404).json({ error: 'Test set not found' });
       }
       res.json(testSet);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch test set' });
+    }
+  });
+
+  // Get a single test set for students (public, excludes sensitive data)
+  app.get('/api/public/test-sets/:id', async (req, res) => {
+    try {
+      const testSet = await storage.getTestSet(req.params.id);
+      if (!testSet) {
+        return res.status(404).json({ error: 'Test set not found' });
+      }
+      // Return only necessary info (no instructor email, no access code)
+      res.json({
+        id: testSet.id,
+        name: testSet.name,
+        language: testSet.language,
+        createdAt: testSet.createdAt,
+        questions: testSet.questions,
+      });
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch test set' });
     }

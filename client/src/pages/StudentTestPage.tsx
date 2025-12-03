@@ -10,7 +10,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { apiRequest } from "@/lib/queryClient";
 import { Key, Loader2 } from "lucide-react";
 
 export default function StudentTestPage() {
@@ -38,8 +37,19 @@ export default function StudentTestPage() {
   // Access code verification mutation
   const verifyAccessCodeMutation = useMutation({
     mutationFn: async (code: string) => {
-      const response = await apiRequest('POST', '/api/public/verify-access-code', { accessCode: code });
-      return response.json();
+      const response = await fetch('/api/public/verify-access-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessCode: code }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || '승인코드 확인에 실패했습니다');
+      }
+      
+      return data;
     },
     onSuccess: (data) => {
       setAccessCodeVerified(true);
@@ -51,17 +61,17 @@ export default function StudentTestPage() {
         description: `${data.testSet.name} 테스트에 접속합니다.`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "인증 실패",
-        description: error.message || "유효하지 않은 승인코드입니다.",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
   const { data: selectedTestSet } = useQuery<TestSet>({
-    queryKey: ['/api/test-sets', selectedTestSetId],
+    queryKey: ['/api/public/test-sets', selectedTestSetId],
     enabled: !!selectedTestSetId,
   });
 
