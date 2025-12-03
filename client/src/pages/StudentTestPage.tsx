@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import TestHeader from "@/components/student/TestHeader";
@@ -10,9 +10,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const LANGUAGES = ["영어", "중국어", "러시아어", "독일어", "프랑스어"];
+import { apiRequest } from "@/lib/queryClient";
+import { Key, Loader2 } from "lucide-react";
 
 export default function StudentTestPage() {
   const [, setLocation] = useLocation();
@@ -24,6 +23,9 @@ export default function StudentTestPage() {
   const urlLanguage = urlParams.get('language');
   const isDirectAccess = !!urlTestId && !!urlLanguage;
   
+  const [accessCode, setAccessCode] = useState("");
+  const [accessCodeVerified, setAccessCodeVerified] = useState(isDirectAccess);
+  const [verifiedTestInfo, setVerifiedTestInfo] = useState<{id: string; name: string; language: string; questionCount: number} | null>(null);
   const [studentName, setStudentName] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState(urlLanguage || "");
   const [selectedTestSetId, setSelectedTestSetId] = useState<string | null>(isDirectAccess ? urlTestId : null);
@@ -33,9 +35,29 @@ export default function StudentTestPage() {
   const [nameConfirmed, setNameConfirmed] = useState(false);
   const { toast } = useToast();
 
-  // Use public API for student access (no auth required)
-  const { data: testSets = [], isLoading: loadingTestSets } = useQuery<{id: string; name: string; language: string; questionCount: number}[]>({
-    queryKey: ['/api/public/test-sets'],
+  // Access code verification mutation
+  const verifyAccessCodeMutation = useMutation({
+    mutationFn: async (code: string) => {
+      const response = await apiRequest('POST', '/api/public/verify-access-code', { accessCode: code });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setAccessCodeVerified(true);
+      setVerifiedTestInfo(data.testSet);
+      setSelectedTestSetId(data.testSet.id);
+      setSelectedLanguage(data.testSet.language);
+      toast({
+        title: "인증 성공",
+        description: `${data.testSet.name} 테스트에 접속합니다.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "인증 실패",
+        description: error.message || "유효하지 않은 승인코드입니다.",
+        variant: "destructive",
+      });
+    },
   });
 
   const { data: selectedTestSet } = useQuery<TestSet>({
@@ -111,6 +133,80 @@ export default function StudentTestPage() {
     return <CompletionScreen onBackToHome={() => setLocation('/')} />;
   }
 
+  // Access code input screen (for non-direct access)
+  if (!isDirectAccess && !accessCodeVerified) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md w-full p-8">
+          <div className="text-center mb-6">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                <Key className="w-8 h-8 text-primary" />
+              </div>
+            </div>
+            <h1 className="text-3xl font-semibold text-foreground mb-2">
+              승인코드 입력
+            </h1>
+            <p className="text-muted-foreground">
+              관리자에게 받은 6자리 승인코드를 입력하세요
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="access-code">승인코드</Label>
+              <Input
+                id="access-code"
+                placeholder="예: ABC123"
+                value={accessCode}
+                onChange={(e) => setAccessCode(e.target.value.toUpperCase().slice(0, 6))}
+                className="text-center text-2xl tracking-widest font-mono"
+                maxLength={6}
+                data-testid="input-access-code"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setLocation('/')}
+                data-testid="button-cancel"
+              >
+                취소
+              </Button>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  if (accessCode.length !== 6) {
+                    toast({
+                      title: "오류",
+                      description: "6자리 승인코드를 입력해주세요.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  verifyAccessCodeMutation.mutate(accessCode);
+                }}
+                disabled={accessCode.length !== 6 || verifyAccessCodeMutation.isPending}
+                data-testid="button-verify"
+              >
+                {verifyAccessCodeMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    확인 중...
+                  </>
+                ) : (
+                  "확인"
+                )}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   // Direct access: just need name confirmation
   if (isDirectAccess && !nameConfirmed) {
     return (
@@ -178,8 +274,8 @@ export default function StudentTestPage() {
     );
   }
 
-  // Normal flow: Student info input screen
-  if (!studentName || !selectedLanguage) {
+  // Access code verified: just need name confirmation
+  if (accessCodeVerified && verifiedTestInfo && !nameConfirmed) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="max-w-md w-full p-8">
@@ -205,29 +301,26 @@ export default function StudentTestPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="language">응시 언어</Label>
-              <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                <SelectTrigger id="language" data-testid="select-language">
-                  <SelectValue placeholder="언어를 선택하세요" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LANGUAGES.map((lang) => (
-                    <SelectItem key={lang} value={lang}>
-                      {lang}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>응시 테스트</Label>
+              <div className="px-3 py-2 border rounded-md bg-muted text-muted-foreground">
+                {verifiedTestInfo.name} ({verifiedTestInfo.language})
+              </div>
             </div>
 
             <div className="flex gap-2 pt-4">
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => setLocation('/')}
-                data-testid="button-cancel"
+                onClick={() => {
+                  setAccessCodeVerified(false);
+                  setVerifiedTestInfo(null);
+                  setAccessCode("");
+                  setSelectedTestSetId(null);
+                  setSelectedLanguage("");
+                }}
+                data-testid="button-back"
               >
-                취소
+                뒤로
               </Button>
               <Button
                 className="w-full"
@@ -240,101 +333,16 @@ export default function StudentTestPage() {
                     });
                     return;
                   }
-                  if (!selectedLanguage) {
-                    toast({
-                      title: "오류",
-                      description: "언어를 선택해주세요.",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                  // Validation passed, will show test selection
+                  setNameConfirmed(true);
                 }}
-                disabled={!studentName.trim() || !selectedLanguage}
+                disabled={!studentName.trim()}
                 data-testid="button-continue"
               >
-                계속하기
+                테스트 시작
               </Button>
             </div>
           </div>
         </Card>
-      </div>
-    );
-  }
-
-  if (!selectedTestSetId) {
-    // Filter test sets by selected language
-    const filteredTestSets = testSets.filter(set => set.language === selectedLanguage);
-
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-semibold text-foreground mb-2">
-              진단평가 선택
-            </h1>
-            <p className="text-muted-foreground">
-              응시할 진단평가를 선택하세요 ({selectedLanguage})
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {loadingTestSets ? (
-              <div className="text-center py-8 text-muted-foreground">
-                로딩 중...
-              </div>
-            ) : filteredTestSets.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground mb-4">
-                  {selectedLanguage} 언어로 된 응시 가능한 진단평가가 없습니다
-                </p>
-                <Button onClick={() => {
-                  setStudentName("");
-                  setSelectedLanguage("");
-                }} data-testid="button-back">
-                  언어 다시 선택
-                </Button>
-              </Card>
-            ) : (
-              <>
-                {filteredTestSets.map((set) => (
-                  <Card
-                    key={set.id}
-                    className="p-6 hover-elevate cursor-pointer"
-                    onClick={() => {
-                      if (set.questionCount > 0) {
-                        setSelectedTestSetId(set.id);
-                      } else {
-                        toast({
-                          title: "선택 불가",
-                          description: "질문이 없는 테스트입니다.",
-                          variant: "destructive",
-                        });
-                      }
-                    }}
-                    data-testid={`card-testset-${set.id}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground mb-1">
-                          {set.name}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          질문 수: {set.questionCount}개
-                        </p>
-                      </div>
-                      {set.questionCount > 0 && (
-                        <Button data-testid={`button-select-${set.id}`}>
-                          선택하기
-                        </Button>
-                      )}
-                    </div>
-                  </Card>
-                ))}
-              </>
-            )}
-          </div>
-        </div>
       </div>
     );
   }

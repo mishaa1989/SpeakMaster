@@ -56,6 +56,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Verify access code (public)
+  app.post('/api/public/verify-access-code', async (req, res) => {
+    try {
+      const { accessCode } = req.body;
+      
+      if (!accessCode || accessCode.length !== 6) {
+        return res.status(400).json({ error: '6자리 승인코드를 입력해주세요' });
+      }
+
+      const testSet = await storage.getTestSetByAccessCode(accessCode);
+      
+      if (!testSet) {
+        return res.status(404).json({ error: '유효하지 않은 승인코드입니다' });
+      }
+
+      // Return test set info for valid access code
+      res.json({
+        success: true,
+        testSet: {
+          id: testSet.id,
+          name: testSet.name,
+          language: testSet.language,
+          questionCount: testSet.questions.length,
+        }
+      });
+    } catch (error) {
+      console.error('Error verifying access code:', error);
+      res.status(500).json({ error: '승인코드 확인에 실패했습니다' });
+    }
+  });
+
   // Get a single test set
   app.get('/api/test-sets/:id', async (req, res) => {
     try {

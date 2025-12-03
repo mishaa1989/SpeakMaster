@@ -23,6 +23,7 @@ export interface IStorage {
   createTestSet(name: string, instructorEmail: string, language: string, questions: Omit<Question, 'id'>[]): Promise<TestSet>;
   updateTestSetEmail(id: string, instructorEmail: string): Promise<boolean>;
   getTestSet(id: string): Promise<TestSet | undefined>;
+  getTestSetByAccessCode(accessCode: string): Promise<TestSet | undefined>;
   getAllTestSets(): Promise<TestSet[]>;
   deleteTestSet(id: string): Promise<boolean>;
   deleteQuestion(testSetId: string, questionId: string): Promise<boolean>;
@@ -103,6 +104,15 @@ export class MemStorage implements IStorage {
 
   async getTestSet(id: string): Promise<TestSet | undefined> {
     return this.testSets.get(id);
+  }
+
+  async getTestSetByAccessCode(accessCode: string): Promise<TestSet | undefined> {
+    for (const testSet of this.testSets.values()) {
+      if (testSet.accessCode === accessCode) {
+        return testSet;
+      }
+    }
+    return undefined;
   }
 
   async getAllTestSets(): Promise<TestSet[]> {
@@ -273,6 +283,35 @@ export class DbStorage implements IStorage {
     const questionRows = await db.select()
       .from(questions)
       .where(eq(questions.testSetId, parseInt(id)))
+      .orderBy(questions.order);
+
+    return {
+      id: testSetRow.id.toString(),
+      name: testSetRow.name,
+      instructorEmail: testSetRow.instructorEmail,
+      language: testSetRow.language,
+      accessCode: testSetRow.accessCode,
+      createdAt: testSetRow.createdAt.toISOString().split('T')[0],
+      questions: questionRows.map(q => ({
+        id: q.id.toString(),
+        filename: q.filename,
+        duration: q.duration,
+        url: `/api/test-sets/${testSetRow.id}/questions/${q.id}/audio`,
+        order: q.order,
+      })),
+    };
+  }
+
+  async getTestSetByAccessCode(accessCode: string): Promise<TestSet | undefined> {
+    const [testSetRow] = await db.select()
+      .from(testSets)
+      .where(eq(testSets.accessCode, accessCode));
+
+    if (!testSetRow) return undefined;
+
+    const questionRows = await db.select()
+      .from(questions)
+      .where(eq(questions.testSetId, testSetRow.id))
       .orderBy(questions.order);
 
     return {
