@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, FileAudio, ChevronDown, Link2, Key, Copy, RefreshCw } from "lucide-react";
+import { Calendar, FileAudio, ChevronDown, Link2, Key, Copy, RefreshCw, Edit2, Check, X } from "lucide-react";
 import QuestionList from "./QuestionList";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -39,7 +39,31 @@ export default function TestSetCard({
   onDeleteSet,
 }: TestSetCardProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isEditingCode, setIsEditingCode] = useState(false);
+  const [editedCode, setEditedCode] = useState(accessCode);
   const { toast } = useToast();
+
+  const updateCodeMutation = useMutation({
+    mutationFn: async (newCode: string) => {
+      const response = await apiRequest('PUT', `/api/test-sets/${id}/access-code`, { accessCode: newCode });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/test-sets'] });
+      setIsEditingCode(false);
+      toast({
+        title: "승인코드 변경 완료",
+        description: `새 승인코드: ${data.accessCode}`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "오류",
+        description: "승인코드 변경에 실패했습니다. 6자리 영문/숫자를 입력해주세요.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const regenerateCodeMutation = useMutation({
     mutationFn: async () => {
@@ -65,6 +89,31 @@ export default function TestSetCard({
   const handleRegenerateCode = (e: React.MouseEvent) => {
     e.stopPropagation();
     regenerateCodeMutation.mutate();
+  };
+
+  const handleStartEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditedCode(accessCode);
+    setIsEditingCode(true);
+  };
+
+  const handleCancelEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditingCode(false);
+    setEditedCode(accessCode);
+  };
+
+  const handleSaveCode = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (editedCode.length === 6) {
+      updateCodeMutation.mutate(editedCode);
+    } else {
+      toast({
+        title: "오류",
+        description: "승인코드는 6자리여야 합니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   const copyTestLink = (e: React.MouseEvent) => {
@@ -120,24 +169,66 @@ export default function TestSetCard({
               {questions.length}/15
             </div>
             <div className="flex items-center gap-2">
-              <div 
-                className="flex items-center gap-1 cursor-pointer hover:text-foreground"
-                onClick={copyAccessCode}
-                title="클릭하여 승인코드 복사"
-              >
-                <Key className="w-3 h-3" />
-                <span className="font-mono font-medium">{accessCode}</span>
-                <Copy className="w-3 h-3" />
-              </div>
-              <button
-                onClick={handleRegenerateCode}
-                disabled={regenerateCodeMutation.isPending}
-                className="text-muted-foreground hover:text-foreground disabled:opacity-50"
-                title="승인코드 재생성"
-                data-testid={`button-regenerate-code-${id}`}
-              >
-                <RefreshCw className={`w-3 h-3 ${regenerateCodeMutation.isPending ? 'animate-spin' : ''}`} />
-              </button>
+              {isEditingCode ? (
+                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                  <Key className="w-3 h-3" />
+                  <input
+                    type="text"
+                    value={editedCode}
+                    onChange={(e) => setEditedCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
+                    className="w-20 px-1 py-0.5 text-xs font-mono font-medium border border-input rounded bg-background"
+                    maxLength={6}
+                    autoFocus
+                    data-testid={`input-edit-access-code-${id}`}
+                  />
+                  <button
+                    onClick={handleSaveCode}
+                    disabled={updateCodeMutation.isPending || editedCode.length !== 6}
+                    className="text-green-600 hover:text-green-700 disabled:opacity-50"
+                    title="저장"
+                    data-testid={`button-save-code-${id}`}
+                  >
+                    <Check className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="text-muted-foreground hover:text-foreground"
+                    title="취소"
+                    data-testid={`button-cancel-edit-${id}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div 
+                    className="flex items-center gap-1 cursor-pointer hover:text-foreground"
+                    onClick={copyAccessCode}
+                    title="클릭하여 승인코드 복사"
+                  >
+                    <Key className="w-3 h-3" />
+                    <span className="font-mono font-medium">{accessCode}</span>
+                    <Copy className="w-3 h-3" />
+                  </div>
+                  <button
+                    onClick={handleStartEdit}
+                    className="text-muted-foreground hover:text-foreground"
+                    title="승인코드 수정"
+                    data-testid={`button-edit-code-${id}`}
+                  >
+                    <Edit2 className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={handleRegenerateCode}
+                    disabled={regenerateCodeMutation.isPending}
+                    className="text-muted-foreground hover:text-foreground disabled:opacity-50"
+                    title="승인코드 재생성"
+                    data-testid={`button-regenerate-code-${id}`}
+                  >
+                    <RefreshCw className={`w-3 h-3 ${regenerateCodeMutation.isPending ? 'animate-spin' : ''}`} />
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

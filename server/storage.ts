@@ -20,7 +20,8 @@ export interface IStorage {
   getAdminPasswordHash(): Promise<string | undefined>;
   
   // Test Set operations
-  createTestSet(name: string, instructorEmail: string, language: string, questions: Omit<Question, 'id'>[]): Promise<TestSet>;
+  createTestSet(name: string, instructorEmail: string, language: string, questions: Omit<Question, 'id'>[], accessCode?: string): Promise<TestSet>;
+  updateAccessCode(id: string, accessCode: string): Promise<boolean>;
   updateTestSetEmail(id: string, instructorEmail: string): Promise<boolean>;
   regenerateAccessCode(id: string): Promise<string | undefined>;
   getTestSet(id: string): Promise<TestSet | undefined>;
@@ -73,7 +74,7 @@ export class MemStorage implements IStorage {
     return this.adminPasswordHash;
   }
 
-  async createTestSet(name: string, instructorEmail: string, language: string, questions: Omit<Question, 'id'>[]): Promise<TestSet> {
+  async createTestSet(name: string, instructorEmail: string, language: string, questions: Omit<Question, 'id'>[], accessCode?: string): Promise<TestSet> {
     const id = randomUUID();
     const questionsWithIds: Question[] = questions.map(q => ({
       ...q,
@@ -85,13 +86,22 @@ export class MemStorage implements IStorage {
       name,
       instructorEmail,
       language,
-      accessCode: generateAccessCode(),
+      accessCode: accessCode || generateAccessCode(),
       createdAt: new Date().toISOString().split('T')[0],
       questions: questionsWithIds,
     };
     
     this.testSets.set(id, testSet);
     return testSet;
+  }
+
+  async updateAccessCode(id: string, accessCode: string): Promise<boolean> {
+    const testSet = this.testSets.get(id);
+    if (!testSet) return false;
+    
+    testSet.accessCode = accessCode;
+    this.testSets.set(id, testSet);
+    return true;
   }
 
   async updateTestSetEmail(id: string, instructorEmail: string): Promise<boolean> {
@@ -234,8 +244,8 @@ export class DbStorage implements IStorage {
     return settings?.passwordHash;
   }
 
-  async createTestSet(name: string, instructorEmail: string, language: string, questionsData: Omit<Question, 'id'>[]): Promise<TestSet> {
-    const accessCode = generateAccessCode();
+  async createTestSet(name: string, instructorEmail: string, language: string, questionsData: Omit<Question, 'id'>[], customAccessCode?: string): Promise<TestSet> {
+    const accessCode = customAccessCode || generateAccessCode();
     
     // Create test set
     const [testSetRow] = await db.insert(testSets).values({
@@ -280,6 +290,13 @@ export class DbStorage implements IStorage {
   async updateTestSetEmail(id: string, instructorEmail: string): Promise<boolean> {
     const result = await db.update(testSets)
       .set({ instructorEmail })
+      .where(eq(testSets.id, parseInt(id)));
+    return true;
+  }
+
+  async updateAccessCode(id: string, accessCode: string): Promise<boolean> {
+    await db.update(testSets)
+      .set({ accessCode })
       .where(eq(testSets.id, parseInt(id)));
     return true;
   }

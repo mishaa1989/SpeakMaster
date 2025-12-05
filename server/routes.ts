@@ -136,7 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'No files uploaded' });
       }
 
-      const { name, durations, instructorEmail, language } = req.body;
+      const { name, durations, instructorEmail, language, accessCode } = req.body;
       if (!name) {
         return res.status(400).json({ error: 'Test set name is required' });
       }
@@ -147,6 +147,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!language) {
         return res.status(400).json({ error: 'Language is required' });
+      }
+
+      // Validate access code if provided
+      if (accessCode && !/^[A-Z0-9]{6}$/i.test(accessCode)) {
+        return res.status(400).json({ error: 'Access code must be exactly 6 alphanumeric characters' });
       }
 
       const parsedDurations = durations ? JSON.parse(durations) : [];
@@ -164,7 +169,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         order: index + 1,
       }));
 
-      const testSet = await storage.createTestSet(name, instructorEmail, language, questions);
+      // Use custom access code if provided (uppercase), otherwise auto-generate
+      const finalAccessCode = accessCode ? accessCode.toUpperCase() : undefined;
+      const testSet = await storage.createTestSet(name, instructorEmail, language, questions, finalAccessCode);
       
       // Store question audio files and update URLs
       for (let i = 0; i < files.length; i++) {
@@ -191,6 +198,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error regenerating access code:', error);
       res.status(500).json({ error: 'Failed to regenerate access code' });
+    }
+  });
+
+  // Update access code for test set - Admin only
+  app.put('/api/test-sets/:id/access-code', requireAuth, async (req, res) => {
+    try {
+      const { accessCode } = req.body;
+      
+      if (!accessCode || !/^[A-Z0-9]{6}$/i.test(accessCode)) {
+        return res.status(400).json({ error: '승인코드는 6자리 영문/숫자로 입력해주세요' });
+      }
+
+      const updated = await storage.updateAccessCode(req.params.id, accessCode.toUpperCase());
+      if (!updated) {
+        return res.status(404).json({ error: 'Test set not found' });
+      }
+      res.json({ accessCode: accessCode.toUpperCase() });
+    } catch (error) {
+      console.error('Error updating access code:', error);
+      res.status(500).json({ error: 'Failed to update access code' });
     }
   });
 

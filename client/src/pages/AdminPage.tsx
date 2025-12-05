@@ -20,6 +20,7 @@ export default function AdminPage() {
   const [instructorEmail, setInstructorEmail] = useState("mishaa1989@naver.com");
   const [selectedLanguage, setSelectedLanguage] = useState(LANGUAGES[0]);
   const [testName, setTestName] = useState("");
+  const [accessCode, setAccessCode] = useState("");
   const [activeTab, setActiveTab] = useState("test-sets");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const { toast } = useToast();
@@ -53,12 +54,15 @@ export default function AdminPage() {
   });
 
   const createTestSetMutation = useMutation({
-    mutationFn: async (data: { name: string; files: File[]; durations: number[]; instructorEmail: string; language: string }) => {
+    mutationFn: async (data: { name: string; files: File[]; durations: number[]; instructorEmail: string; language: string; accessCode?: string }) => {
       const formData = new FormData();
       formData.append('name', data.name);
       formData.append('instructorEmail', data.instructorEmail);
       formData.append('language', data.language);
       formData.append('durations', JSON.stringify(data.durations));
+      if (data.accessCode) {
+        formData.append('accessCode', data.accessCode);
+      }
       data.files.forEach(file => {
         formData.append('files', file);
       });
@@ -200,10 +204,18 @@ export default function AdminPage() {
         files.map(file => getAudioDuration(file))
       );
       
-      createTestSetMutation.mutate({ name, files, durations, instructorEmail, language: selectedLanguage });
+      createTestSetMutation.mutate({ 
+        name, 
+        files, 
+        durations, 
+        instructorEmail, 
+        language: selectedLanguage,
+        accessCode: accessCode.trim() || undefined
+      });
       
       // Reset form
       setTestName("");
+      setAccessCode("");
       setSelectedLanguage(LANGUAGES[0]);
     } catch (error) {
       toast({
@@ -369,6 +381,24 @@ export default function AdminPage() {
                     />
                     <p className="text-xs text-muted-foreground mt-2">
                       최종 이름: {selectedLanguage} - {testName || "(이름 입력)"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      승인코드 (선택사항)
+                    </label>
+                    <input
+                      type="text"
+                      value={accessCode}
+                      onChange={(e) => setAccessCode(e.target.value.toUpperCase().slice(0, 6))}
+                      placeholder="예: ABC123 (비워두면 자동 생성)"
+                      className="w-full px-4 py-2 rounded-md border border-input bg-background text-foreground font-mono tracking-wider"
+                      data-testid="input-access-code"
+                      maxLength={6}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      6자리 영문/숫자 조합. 비워두면 자동으로 생성됩니다.
                     </p>
                   </div>
                 </Card>
