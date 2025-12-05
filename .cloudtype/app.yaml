@@ -1,0 +1,10 @@
+name: centrum-taurus
+app: node@20
+options:
+  env:
+    - name: NODE_ENV
+      value: production
+  install: npm ci --legacy-peer-deps
+  build: npm run build
+  ports: 5000/http
+  start: npm run start
