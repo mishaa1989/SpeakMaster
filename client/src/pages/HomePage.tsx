@@ -10,11 +10,11 @@ export default function HomePage() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <div className="max-w-md w-full">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-semibold text-foreground mb-4">
-            첸트룸 타우러스 진단평가 시스템
+          <h1 className="text-4xl font-semibold text-foreground mb-2">
+            첸트룸 타우러스
           </h1>
           <p className="text-lg text-muted-foreground">
-            외국어 회화 학습 관리 시스템
+            외국어 회화 진단 평가 시스템
           </p>
         </div>
 
