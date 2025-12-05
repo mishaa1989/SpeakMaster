@@ -29,7 +29,7 @@ export default function HomePage() {
             </div>
             <div>
               <h2 className="text-2xl font-semibold text-foreground mb-2">
-                학생 모드
+                회원 모드
               </h2>
               <p className="text-sm text-muted-foreground">
                 진단평가 응시하기
