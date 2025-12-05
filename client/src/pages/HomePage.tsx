@@ -13,7 +13,7 @@ export default function HomePage() {
           <h1 className="text-4xl font-semibold text-foreground mb-2">
             첸트룸 타우러스
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-2xl text-muted-foreground">
             외국어 회화 진단 평가 시스템
           </p>
         </div>
