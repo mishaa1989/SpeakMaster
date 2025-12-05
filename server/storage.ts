@@ -128,7 +128,8 @@ export class MemStorage implements IStorage {
   }
 
   async getTestSetByAccessCode(accessCode: string): Promise<TestSet | undefined> {
-    for (const testSet of this.testSets.values()) {
+    const testSetsArray = Array.from(this.testSets.values());
+    for (const testSet of testSetsArray) {
       if (testSet.accessCode === accessCode) {
         return testSet;
       }
